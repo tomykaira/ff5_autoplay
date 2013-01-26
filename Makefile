@@ -2,13 +2,24 @@ OPENCV_OPTS=-lopencv_gpu -lopencv_contrib -lopencv_legacy -lopencv_objdetect -lo
 
 CPPFLAGS=-g -Wall
 
-all: capture number
+PROG=capture
+SRC=capture.cpp number.cpp
+OBJS=$(patsubst %.cpp,%.o,$(SRC))
+DEPENDS=$(patsubst %.cpp,%.d,$(SRC))
 
-capture: capture.cpp
-	g++ $(CPPFLAGS) -o capture capture.cpp -L/usr/X11/lib -lX11 $(OPENCV_OPTS)
+$(PROG): $(OBJS)
+	$(CC) -o $@ $(OBJS) $(OPENCV_OPTS)
 
-number: number.cpp
-	g++ $(CPPFLAGS) -o number number.cpp $(OPENCV_OPTS)
+.c.o:
+	$(CC) $(CFLAGS) -c $<
 
+.PHONY : clean depend
 clean:
-	rm -f number capture *.o
+	-$(RM) $(PROG) $(OBJS) $(DEPENDS)
+
+%.d: %.c
+	@set -e; $(CC) -MM $(CPPFLAGS) $< \
+		| sed 's/\($*\)\.o[ :]*/\1.o $@ : /g' > $@; \
+		[ -s $@ ] || rm -f $@
+
+-include $(DEPENDS)

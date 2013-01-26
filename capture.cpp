@@ -3,6 +3,7 @@
  * http://d.hatena.ne.jp/sa-y/20070306
 **/
 
+#include <iostream>
 #include <stdio.h>
 #include <stdint.h>
 #include <assert.h>
@@ -13,7 +14,7 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
-#define IMAGE_FILE_PATH "capture_screen.ppm"
+#include "number.hpp"
 
 /* dst is initialized with cvCreateImage(cvSize(src.width, src.height), IPL_DEPTH_8U, 3); */
 static IplImage * XImageToIplImage(const XImage *src)
@@ -120,10 +121,10 @@ int main(int argc, char* argv[])
 
 	XGetWindowAttributes(display, targetWindow, &win_info);
 
-	while (cvWaitKey(10) == -1) {
+	while ((cvWaitKey(10) & 0xff) != 'q') {
 
 		image = XGetImage(display, targetWindow,
-			0, 0, win_info.width/2, win_info.height/2,
+			0, 0, win_info.width, win_info.height,
 			AllPlanes, ZPixmap);
 
 		if (image != NULL)
@@ -131,6 +132,31 @@ int main(int argc, char* argv[])
 			if (image->bits_per_pixel == 32) {
 				outputImage = XImageToIplImage(image);
 				cvShowImage("capture", outputImage);
+
+				cv::Mat mat = cv::cvarrToMat(outputImage);
+
+				// cv::Rect(16, 0, 480, 448)    : full play area
+				// cv::Rect(16, 320, 480, 120)  : command area (outer bound)
+				// cv::Rect(16, 320, 96, 120)   : enemy name
+				// cv::Rect(112, 320, 112, 120) : command area
+				// cv::Rect(224, 320, 272, 120) : player status
+				// cv::Rect(332, 320, 72, 120)  : hp area
+				cv::rectangle(mat, cv::Rect(16, 320, 96, 120), cv::Scalar(0, 0, 255), 1);
+				cv::rectangle(mat, cv::Rect(112, 320, 112, 120), cv::Scalar(0, 0, 255), 1);
+				cv::rectangle(mat, cv::Rect(224, 320, 272, 120), cv::Scalar(0, 0, 255), 1);
+				cv::rectangle(mat, cv::Rect(332, 320, 72, 120), cv::Scalar(0, 255, 255), 1);
+
+				cv::Mat hp_area = mat(cv::Rect(332, 320, 72, 120));
+				std::vector<int> HPs = findNumbers(hp_area);
+
+				cv::imshow("markup", mat);
+
+				std::vector<int>::iterator it = HPs.begin();
+				while (it != HPs.end()) {
+					std::cout << *it << std::endl;
+					++it;
+				}
+
 				cvReleaseImage(&outputImage);
 			} else {
 				fprintf(stderr, "Not Supported format : bits_per_pixel = %d\n", image->bits_per_pixel);

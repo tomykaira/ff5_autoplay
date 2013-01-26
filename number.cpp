@@ -122,6 +122,7 @@ std::vector<int> findNumbers(cv::Mat &search_img0)
 	return compositeNumbers(found);
 }
 
+/*
 int
 main(int argc, char *argv[])
 {
@@ -138,3 +139,4 @@ main(int argc, char *argv[])
 	cv::imshow("search image", search_img0);
 	cv::waitKey(0);
 }
+*/
