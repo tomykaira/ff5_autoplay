@@ -10,22 +10,12 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
+#include "number.hpp"
+
 #define DIFF(end, start) (((end).tv_sec - (start).tv_sec)*1000*1000 + (end).tv_usec - (start).tv_usec)
 
 // 数字のサイズ + 余裕
 #define SIZE 20
-
-class NumberLocation {
-public:
-	int x;
-	int y;
-	int num;
-
-	NumberLocation(int x, int y, int num) :
-		x(x), y(y), num(num)
-	{
-	}
-};
 
 static bool compareLocation(const NumberLocation& left, const NumberLocation& right)
 {
@@ -34,7 +24,7 @@ static bool compareLocation(const NumberLocation& left, const NumberLocation& ri
 		|| (left.y == right.y && left.x == right.x && left.num < right.num);
 }
 
-std::vector<int> CompositeNumbers(const std::vector<NumberLocation> found)
+std::vector<int> compositeNumbers(std::vector<NumberLocation> found)
 {
 	int current_x = 0;
 	int current_y = 0;
@@ -42,6 +32,8 @@ std::vector<int> CompositeNumbers(const std::vector<NumberLocation> found)
 	bool first_hit = true;
 
 	std::vector <int> result;
+
+	std::sort(found.begin(),found.end(), compareLocation);
 
 	std::vector<NumberLocation>::const_iterator it = found.begin();
 	while (it != found.end()) {
@@ -67,13 +59,9 @@ std::vector<int> CompositeNumbers(const std::vector<NumberLocation> found)
 	return result;
 }
 
-int
-main(int argc, char *argv[])
+// Add rectangles to input image
+std::vector<int> findNumbers(cv::Mat &search_img0)
 {
-	cv::Mat search_img0 = cv::imread(argv[1], 1);
-
-	cv::namedWindow("search image", CV_WINDOW_AUTOSIZE|CV_WINDOW_FREERATIO);
-
 	// 探索画像
 	cv::Mat search_img;
 	search_img0.copyTo( search_img );
@@ -95,9 +83,6 @@ main(int argc, char *argv[])
 
 			// テンプレート画像
 			cv::Mat tmp_img = cv::imread(template_file, 1);
-			if(!tmp_img.data) return -1;
-
-			std::cout << "number " << num << std::endl;
 
 			// 最大 50 個検出する
 			for ( int i=0; i<50; i++ ) {
@@ -116,7 +101,6 @@ main(int argc, char *argv[])
 
 				roi_rect.x = max_pt.x;
 				roi_rect.y = max_pt.y;
-				std::cout << "\t(" << max_pt.x << ", " << max_pt.y << "), score=" << maxVal << std::endl;
 
 				if (maxVal < 0.999999)
 					cv::putText(search_img0, num_string, cvPoint(roi_rect.x, roi_rect.y), cv::FONT_HERSHEY_SIMPLEX, 0.6,
@@ -132,12 +116,18 @@ main(int argc, char *argv[])
 
 	}
 
-	std::sort(found.begin(),found.end(), compareLocation);
-
-	std::vector<int> extracted = CompositeNumbers(found);
-
 	gettimeofday(&end, NULL);
 	std::cout << "elapsed time: " << DIFF(end, start) << std::endl;
+
+	return compositeNumbers(found);
+}
+
+int
+main(int argc, char *argv[])
+{
+	cv::Mat search_img0 = cv::imread(argv[1], 1);
+
+	std::vector<int> extracted = findNumbers(search_img0);
 
 	std::vector<int>::iterator it = extracted.begin();
 	while (it != extracted.end()) {
