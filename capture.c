@@ -12,17 +12,62 @@
 #include "cv.h"
 #include "highgui.h"
 
+#define IMAGE_FILE_PATH "capture_screen.ppm"
+
 /* dst is initialized with cvCreateImage(cvSize(src.width, src.height), IPL_DEPTH_8U, 3); */
-void XImageToIplImage(const XImage *src, IplImage *dst)
+static IplImage * XImageToIplImage(const XImage *src)
 {
-	for (int y = 0;y < src->height;y++) {
-		char * cp = src->data + y * src->bytes_per_line;
-		for (int x = 0;x < src->width;x++) {
-			uint32_t pixel = *(uint32_t *)cp;
+	int x, y;
+	char *cp;
+	uint32_t pixel;
+
+	IplImage * dst = cvCreateImage(cvSize(src->width, src->height), IPL_DEPTH_8U, 3);
+
+	for (y = 0;y < src->height;y++) {
+		cp = src->data + y * src->bytes_per_line;
+		for (x = 0;x < src->width;x++) {
+			pixel = *(uint32_t *)cp;
+
 			((uchar*)(dst->imageData + dst->widthStep*y))[x*3  ] = (pixel & 0x000000ff) >> 0;
 			((uchar*)(dst->imageData + dst->widthStep*y))[x*3+1] = (pixel & 0x0000ff00) >> 8;
 			((uchar*)(dst->imageData + dst->widthStep*y))[x*3+2] = (pixel & 0x00ff0000) >> 16;
+			cp += 4;
 		}
+	}
+
+	return dst;
+}
+
+static
+void writeXImageToP3File(XImage *image, const char *file_path)
+{
+	FILE *file;
+
+	file = fopen(file_path, "wb");
+	if (file != NULL)
+	{
+		int x, y;
+		char *cp;
+		uint32_t pixel;
+
+		fprintf(file, "P3\n");
+		fprintf(file, "%d %d\n", image->width, image->height);
+		fprintf(file, "255\n");
+		for (y = 0;y < image->height;y++)
+		{
+			cp = image->data + y * image->bytes_per_line;
+			for (x = 0;x < image->width;x++)
+			{
+				pixel = *(uint32_t *)cp;
+				fprintf(file, "%d %d %d ",
+					(pixel & 0x00ff0000) >> 16,
+					(pixel & 0x0000ff00) >> 8,
+					(pixel & 0x000000ff) >> 0);
+				cp += 4;
+			}
+			fprintf(file, "\n");
+		}
+		fclose(file);
 	}
 }
 
@@ -61,7 +106,7 @@ int main(int argc, char* argv[])
 	int width, height;
 	XImage *image;
 
-IplImage * outputImage;
+	IplImage * outputImage;
 
 	if (argc < 2) {
 		printf("Usage: %s WINDOW_NAME\n", argv[0]);
@@ -78,7 +123,7 @@ IplImage * outputImage;
 	width = win_info.width;
 	height = win_info.height;
 
-	// while (cvWaitKey(10) & 0xff != 0x1b) {
+	while (cvWaitKey(10) == -1) {
 
 		image = XGetImage(display, targetWindow,
 			0, 0, win_info.width/2, win_info.height/2,
@@ -87,18 +132,17 @@ IplImage * outputImage;
 		if (image != NULL)
 		{
 			if (image->bits_per_pixel == 32) {
-				outputImage = cvCreateImage(cvSize(image->width, image->height), IPL_DEPTH_8U, 3);
-				XImageToIplImage(image, outputImage);
+				outputImage = XImageToIplImage(image);
 				cvShowImage("capture", outputImage);
+				writeXImageToP3File(image, IMAGE_FILE_PATH);
+				cvReleaseImage(&outputImage);
 			} else {
 				fprintf(stderr, "Not Supported format : bits_per_pixel = %d\n", image->bits_per_pixel);
 				return(1);
 			}
 			XFree(image);
 		}
-	// }
-
-	cvWaitKey(0);
+	}
 
 	XCloseDisplay(display);
 	return 0;
