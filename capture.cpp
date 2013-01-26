@@ -131,6 +131,7 @@ int main(int argc, char* argv[])
 		{
 			if (image->bits_per_pixel == 32) {
 				outputImage = XImageToIplImage(image);
+
 				cvShowImage("capture", outputImage);
 
 				cv::Mat mat = cv::cvarrToMat(outputImage);
@@ -141,21 +142,36 @@ int main(int argc, char* argv[])
 				// cv::Rect(112, 320, 112, 120) : command area
 				// cv::Rect(224, 320, 272, 120) : player status
 				// cv::Rect(332, 320, 72, 120)  : hp area
-				cv::rectangle(mat, cv::Rect(16, 320, 96, 120), cv::Scalar(0, 0, 255), 1);
-				cv::rectangle(mat, cv::Rect(112, 320, 112, 120), cv::Scalar(0, 0, 255), 1);
-				cv::rectangle(mat, cv::Rect(224, 320, 272, 120), cv::Scalar(0, 0, 255), 1);
-				cv::rectangle(mat, cv::Rect(332, 320, 72, 120), cv::Scalar(0, 255, 255), 1);
 
-				cv::Mat hp_area = mat(cv::Rect(332, 320, 72, 120));
-				std::vector<int> HPs = findNumbers(hp_area);
+				// names
+				int activePlayer;
+
+				const cv::Scalar yellow = cv::Scalar(0, 255, 255);
+				const cv::Scalar blue   = cv::Scalar(255, 0, 0);
+
+				for (int i = 0; i < 4; ++i) {
+					cv::Rect nameRect = cv::Rect(224, 334 + i*24, 72, 16);
+					cv::Mat nameArea = mat(nameRect);
+					int yellowCount = 0;
+
+					cv::Mat_<uint32_t>::iterator it = nameArea.begin<uint32_t>();
+					for(; it!=nameArea.end<uint32_t>(); ++it) {
+						if ((*it & 0xff0000) > 100 && (*it & 0xff) < 100)
+							++ yellowCount;
+					}
+
+					cv::rectangle(mat, nameRect, yellowCount > 100 ? yellow : blue, 1);
+
+					if (yellowCount > 100)
+						activePlayer = i;
+				}
+
+				cv::Mat hpArea = mat(cv::Rect(332, 320, 72, 120));
+				std::vector<int> HPs = findNumbers(hpArea);
 
 				cv::imshow("markup", mat);
 
 				std::vector<int>::iterator it = HPs.begin();
-				while (it != HPs.end()) {
-					std::cout << *it << std::endl;
-					++it;
-				}
 
 				cvReleaseImage(&outputImage);
 			} else {
