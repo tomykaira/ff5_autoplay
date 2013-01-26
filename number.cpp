@@ -2,10 +2,13 @@
 #include <cstdio>
 #include <stdint.h>
 #include <stdlib.h>
+#include <sys/time.h>
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
+
+#define DIFF(end, start) (((end).tv_sec - (start).tv_sec)*1000*1000 + (end).tv_usec - (start).tv_usec)
 
 int
 main(int argc, char *argv[])
@@ -20,7 +23,10 @@ main(int argc, char *argv[])
 
 	cv::Mat result_img;
 
-	for (double minScore = 1.0; minScore > 0.9; minScore -= 0.02) {
+	struct timeval start, end;
+	gettimeofday(&start, NULL);
+
+	for (double minScore = 1.0; minScore > 0.7; minScore -= 0.02) {
 
 		for (int num = 0; num < 10; ++num) {
 			char template_file[1024];
@@ -64,6 +70,9 @@ main(int argc, char *argv[])
 		}
 
 	}
+
+	gettimeofday(&end, NULL);
+	std::cout << "elapsed time: " << DIFF(end, start) << std::endl;
 
 	cv::imshow("search image", search_img0);
 	cv::waitKey(0);
