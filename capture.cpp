@@ -9,8 +9,9 @@
 #include <stdlib.h>
 #include <X11/Xlib.h>
 
-#include "cv.h"
-#include "highgui.h"
+#include <opencv2/core/core.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/highgui/highgui.hpp>
 
 #define IMAGE_FILE_PATH "capture_screen.ppm"
 
@@ -71,14 +72,13 @@ void writeXImageToP3File(XImage *image, const char *file_path)
 	}
 }
 
-Window Window_With_Name(
+Window windowWithName(
     Display *dpy,
     Window top,
     const char *name)
 {
 	Window *children, dummy;
 	unsigned int nchildren;
-	int i;
 	Window w=0;
 	char *window_name;
 
@@ -88,8 +88,8 @@ Window Window_With_Name(
 	if (!XQueryTree(dpy, top, &dummy, &dummy, &children, &nchildren))
 	  return(0);
 
-	for (i=0; i<nchildren; i++) {
-		w = Window_With_Name(dpy, children[i], name);
+	for (unsigned int i = 0; i<nchildren; i++) {
+		w = windowWithName(dpy, children[i], name);
 		if (w)
 		  break;
 	}
@@ -103,7 +103,6 @@ int main(int argc, char* argv[])
 	int screen;
 	Window rootWindow, targetWindow;
 	XWindowAttributes win_info;
-	int width, height;
 	XImage *image;
 
 	IplImage * outputImage;
@@ -117,11 +116,9 @@ int main(int argc, char* argv[])
 	screen = DefaultScreen(display);
 	rootWindow = RootWindow(display, screen);
 
-	targetWindow = Window_With_Name(display, rootWindow, argv[1]);
+	targetWindow = windowWithName(display, rootWindow, argv[1]);
 
 	XGetWindowAttributes(display, targetWindow, &win_info);
-	width = win_info.width;
-	height = win_info.height;
 
 	while (cvWaitKey(10) == -1) {
 
@@ -134,7 +131,6 @@ int main(int argc, char* argv[])
 			if (image->bits_per_pixel == 32) {
 				outputImage = XImageToIplImage(image);
 				cvShowImage("capture", outputImage);
-				writeXImageToP3File(image, IMAGE_FILE_PATH);
 				cvReleaseImage(&outputImage);
 			} else {
 				fprintf(stderr, "Not Supported format : bits_per_pixel = %d\n", image->bits_per_pixel);
