@@ -108,6 +108,25 @@ Window windowWithName(
 // cv::Rect(224, 320, 272, 120) : character status
 // cv::Rect(332, 320, 72, 120)  : hp area
 
+int attackCommandIsDisplayed(cv::Mat mat)
+{
+	cv::Mat commandArea = mat(cv::Rect(112, 320, 112, 120));
+	cv::Mat templateImage = cv::imread("templates/attack.bmp", 1);
+	cv::Mat result;
+
+	cv::matchTemplate(commandArea, templateImage, result, CV_TM_CCOEFF_NORMED);
+
+	double maxScore;
+	cv::Point point;
+	cv::Rect roi(0, 0, templateImage.cols, templateImage.rows);
+	cv::minMaxLoc(result, NULL, &maxScore, NULL, &point);
+	roi.x = point.x;
+	roi.y = point.y;
+
+	cv::rectangle(commandArea, roi, cv::Scalar(0, 0, 255), 3);
+
+	return maxScore > 0.95;
+}
 
 int markActiveCharacter(cv::Mat mat)
 {
@@ -158,8 +177,7 @@ int sendCommand(int activeCharacter, cv::Mat mat)
 		}
 	}
 
-std::cout << lowestHPCharacter << " : " << lowestHP << std::endl;
-
+	std::cout << lowestHPCharacter << " : " << lowestHP << std::endl;
 
 	switch (activeCharacter) {
 	case 0: // ファリス
@@ -244,6 +262,7 @@ int main(int argc, char* argv[])
 
 				gettimeofday(&now, NULL);
 				if ((active = markActiveCharacter(mat)) != -1
+				    && attackCommandIsDisplayed(mat)
 				    && DIFF(now, previousCommandTime) > 100*1000) {
 					if (sendCommand(active, mat) == 0) {
 						gettimeofday(&previousCommandTime, NULL);

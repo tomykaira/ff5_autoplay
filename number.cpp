@@ -78,7 +78,7 @@ std::vector<int> findNumbers(cv::Mat &search_img0)
 		for (int num = 0; num < 10; ++num) {
 			char template_file[1024];
 			char num_string[1024];
-			sprintf(template_file, "number_data/%d.bmp", num);
+			sprintf(template_file, "templates/%d.bmp", num);
 			sprintf(num_string, "%d", num);
 
 			// テンプレート画像
