@@ -131,10 +131,6 @@ int attackCommandIsDisplayed(cv::Mat mat)
 	roi.x = point.x;
 	roi.y = point.y;
 
-	cv::rectangle(commandArea, roi, cv::Scalar(0, 0, 255), 3);
-
-	result.release();
-
 	return maxScore > 0.95;
 }
 
@@ -218,11 +214,12 @@ int main(int argc, char* argv[])
 	Window rootWindow, targetWindow;
 	XWindowAttributes win_info;
 	XImage *image;
+	const char * ffWindowName = "\"FINAL FANTASY 5\" Snes9x: Linux: 1.53";
 
-	int active;
 	cv::Mat mat;
 
-	const char * ffWindowName = "\"FINAL FANTASY 5\" Snes9x: Linux: 1.53";
+	int active;
+	bool autoControl = true;
 
 	display = XOpenDisplay("");
 	screen = DefaultScreen(display);
@@ -240,7 +237,7 @@ int main(int argc, char* argv[])
 	bool preparingRefresh = false;
 	struct timeval attackStart, now;
 
-	while ((cvWaitKey(10) & 0xff) != 'q') {
+	while (1) {
 
 		image = XGetImage(display, targetWindow,
 			0, 0, win_info.width, win_info.height,
@@ -255,7 +252,7 @@ int main(int argc, char* argv[])
 
 			active = markActiveCharacter(mat);
 
-			if (active != -1) {
+			if (autoControl && active != -1) {
 				if (attackCommandIsDisplayed(mat) && !preparingRefresh) {
 					after(&now, &attackStart, 100000);
 					preparingRefresh = true;
@@ -270,9 +267,34 @@ int main(int argc, char* argv[])
 			cv::imshow("markup", mat);
 		} else {
 			std::cerr << "XGetImage returns null" << std::endl;
+			XCloseDisplay(display);
 			return 1;
 		}
+
+		switch (cvWaitKey(10) & 0xff) {
+		case 'q':
+			goto end;
+
+		case 's':
+			std::cout << "Toggle auto control" << std::endl;
+			autoControl = !autoControl;
+			break;
+
+		case 'd':
+			image = XGetImage(display, targetWindow,
+			                  0, 0, win_info.width, win_info.height,
+			                  AllPlanes, ZPixmap);
+
+			if (image != NULL) {
+				writeXImageToP3File(image, "dump.ppm");
+				XDestroyImage(image);
+			}
+			break;
+
+		}
 	}
+
+ end:
 
 	XCloseDisplay(display);
 	return 0;
