@@ -121,3 +121,11 @@ void throwPotion(int characterId)
 	selectNthCaracter(characterId);
 	dbusSendButton("A");
 }
+
+void selectNth(int id)
+{
+	for (int i = 0; i < id; ++i) {
+		dbusSendButton("Down");
+	}
+	dbusSendButton("A");
+}

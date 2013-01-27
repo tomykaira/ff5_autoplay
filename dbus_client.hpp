@@ -4,6 +4,8 @@
 int dbusInit();
 void dbusDisconnect();
 
+void selectNth(int id);
+
 void attack();
 void attackParty(int characterId);
 void heal(int characterId);
