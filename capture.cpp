@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <X11/Xlib.h>
 #include <sys/time.h>
+#include <mcheck.h>
 
 #define DIFF(end, start) (((end).tv_sec - (start).tv_sec)*1000*1000 + (end).tv_usec - (start).tv_usec)
 
@@ -243,6 +244,8 @@ int main(int argc, char* argv[])
 	bool preparingRefresh = false;
 	struct timeval attackStart, now;
 
+	mtrace();
+
 	while ((cvWaitKey(10) & 0xff) != 'q') {
 
 		image = XGetImage(display, targetWindow,
@@ -287,6 +290,8 @@ int main(int argc, char* argv[])
 			XFree(image);
 		}
 	}
+
+	muntrace();
 
 	XCloseDisplay(display);
 	return 0;
