@@ -220,16 +220,13 @@ int main(int argc, char* argv[])
 
 	int active;
 
-	if (argc < 2) {
-		printf("Usage: %s WINDOW_NAME\n", argv[0]);
-		exit(1);
-	}
+	const char * ffWindowName = "\"FINAL FANTASY 5\" Snes9x: Linux: 1.53";
 
 	display = XOpenDisplay("");
 	screen = DefaultScreen(display);
 	rootWindow = RootWindow(display, screen);
 
-	targetWindow = windowWithName(display, rootWindow, argv[1]);
+	targetWindow = windowWithName(display, rootWindow, ffWindowName);
 
 	XGetWindowAttributes(display, targetWindow, &win_info);
 
