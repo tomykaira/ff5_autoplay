@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <X11/Xlib.h>
 #include <sys/time.h>
+
 #define DIFF(end, start) (((end).tv_sec - (start).tv_sec)*1000*1000 + (end).tv_usec - (start).tv_usec)
 
 #include <opencv2/core/core.hpp>
@@ -115,10 +116,11 @@ Window windowWithName(
 // cv::Rect(224, 320, 272, 120) : character status
 // cv::Rect(332, 320, 72, 120)  : hp area
 
+cv::Mat templateImage = cv::imread("templates/attack.bmp", 1);
+
 int attackCommandIsDisplayed(cv::Mat mat)
 {
 	cv::Mat commandArea = mat(cv::Rect(112, 320, 112, 120));
-	cv::Mat templateImage = cv::imread("templates/attack.bmp", 1);
 	cv::Mat result;
 
 	cv::matchTemplate(commandArea, templateImage, result, CV_TM_CCOEFF_NORMED);
@@ -131,6 +133,8 @@ int attackCommandIsDisplayed(cv::Mat mat)
 	roi.y = point.y;
 
 	cv::rectangle(commandArea, roi, cv::Scalar(0, 0, 255), 3);
+
+	result.release();
 
 	return maxScore > 0.95;
 }
@@ -219,6 +223,7 @@ int main(int argc, char* argv[])
 	IplImage * outputImage;
 
 	int active;
+	cv::Mat mat;
 
 	const char * ffWindowName = "\"FINAL FANTASY 5\" Snes9x: Linux: 1.53";
 
@@ -249,19 +254,24 @@ int main(int argc, char* argv[])
 			if (image->bits_per_pixel == 32) {
 				outputImage = XImageToIplImage(image);
 
-				cv::Mat mat = cv::cvarrToMat(outputImage);
+				mat = cv::cvarrToMat(outputImage);
 
 				gettimeofday(&now, NULL);
 
 				active = markActiveCharacter(mat);
 
 				if (active != -1) {
+					std::cout << "Active " << active << std::endl;
 					if (attackCommandIsDisplayed(mat) && !preparingRefresh) {
+						std::cout << "Preparing" << std::endl;
+
 						after(&now, &attackStart, 100000);
 						preparingRefresh = true;
 					}
 
 					if (preparingRefresh && DIFF(now, attackStart) >= 0) {
+						std::cout << "executing" << std::endl;
+
 						sendCommand(active, mat);
 						preparingRefresh = false;
 					}
