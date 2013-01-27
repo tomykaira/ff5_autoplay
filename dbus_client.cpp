@@ -1,3 +1,4 @@
+#include <iostream>
 #include <stdio.h>
 #include <unistd.h>
 #include <dbus/dbus.h>
@@ -72,31 +73,51 @@ void dbusSendButton(const char * button)
 	usleep(1000*1000);
 }
 
+void selectNthCaracter(int characterId)
+{
+	if (characterId < 3) {
+		for (int i = 0; i < characterId; ++i) {
+			dbusSendButton("Down");
+		}
+	} else {
+		dbusSendButton("Up");
+	}
+}
+
 void attack()
 {
+	std::cout << "たたかう" << std::endl;
 	dbusSendButton("A");
+	dbusSendButton("A");
+}
+
+void attackParty(int characterId)
+{
+	std::cout << "たたかう to " << characterId << std::endl;
+	dbusSendButton("A");
+	dbusSendButton("Right");
+	selectNthCaracter(characterId);
 	dbusSendButton("A");
 }
 
 void heal(int characterId)
 {
+	std::cout << "ケアル to " << characterId << std::endl;
+	dbusSendButton("Down");
 	dbusSendButton("Down");
 	dbusSendButton("A");
 	dbusSendButton("A");
-	for (int i = 0; i < characterId; ++i) {
-		dbusSendButton("Down");
-	}
+	selectNthCaracter(characterId);
 	dbusSendButton("A");
 }
 
 void throwPotion(int characterId)
 {
+	std::cout << "ポーション to " << characterId << std::endl;
 	dbusSendButton("Up");
 	dbusSendButton("A");
 	dbusSendButton("A");
 	dbusSendButton("A");
-	for (int i = 0; i < characterId; ++i) {
-		dbusSendButton("Down");
-	}
+	selectNthCaracter(characterId);
 	dbusSendButton("A");
 }

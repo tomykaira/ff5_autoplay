@@ -5,6 +5,7 @@ int dbusInit();
 void dbusDisconnect();
 
 void attack();
+void attackParty(int characterId);
 void heal(int characterId);
 void throwPotion(int characterId);
 

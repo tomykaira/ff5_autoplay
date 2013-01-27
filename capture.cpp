@@ -19,6 +19,13 @@
 #include "number.hpp"
 #include "dbus_client.hpp"
 
+void after(const struct timeval * from, struct timeval * to, int diff)
+{
+	int new_usec = from->tv_usec + diff;
+	to->tv_usec = new_usec % (1000*1000);
+	to->tv_sec  = from->tv_sec + new_usec / (1000*1000);
+}
+
 /* dst is initialized with cvCreateImage(cvSize(src.width, src.height), IPL_DEPTH_8U, 3); */
 static IplImage * XImageToIplImage(const XImage *src)
 {
@@ -180,32 +187,21 @@ int sendCommand(int activeCharacter, cv::Mat mat)
 	std::cout << lowestHPCharacter << " : " << lowestHP << std::endl;
 
 	switch (activeCharacter) {
-	case 0: // ファリス
-	case 3: // バッツ
-		std::cout << "Attack" << std::endl;
+	case 0:
+		std::cout << "ファリス" << std::endl;
 		attack();
 		break;
-
 	case 1: // レナ
 		std::cout << "レナ" << std::endl;
-		// if (lowestHP < 150) {
-			std::cout << "\tHeal " << lowestHPCharacter << std::endl;
-			heal(lowestHPCharacter);
-		// } else {
-		// 	std::cout << "\tAttack" << std::endl;
-		// 	attack();
-		// }
+		attackParty(lowestHPCharacter);
 		break;
-
 	case 2: // ガラフ
 		std::cout << "ガラフ" << std::endl;
-		// if (lowestHP < 50) {
-			std::cout << "\tPotion " << lowestHPCharacter << std::endl;
-			throwPotion(lowestHPCharacter);
-		// } else {
-		// 	std::cout << "\tAttack" << std::endl;
-		// 	attack();
-		// }
+		attack();
+		break;
+	case 3: // バッツ
+		std::cout << "バッツ" << std::endl;
+		attack();
 		break;
 	}
 
@@ -223,9 +219,6 @@ int main(int argc, char* argv[])
 	IplImage * outputImage;
 
 	int active;
-
-	struct timeval previousCommandTime, now;
-	gettimeofday(&previousCommandTime, NULL); // initialize
 
 	if (argc < 2) {
 		printf("Usage: %s WINDOW_NAME\n", argv[0]);
@@ -245,6 +238,9 @@ int main(int argc, char* argv[])
 		return 1;
 	}
 
+	bool preparingRefresh = false;
+	struct timeval attackStart, now;
+
 	while ((cvWaitKey(10) & 0xff) != 'q') {
 
 		image = XGetImage(display, targetWindow,
@@ -256,16 +252,21 @@ int main(int argc, char* argv[])
 			if (image->bits_per_pixel == 32) {
 				outputImage = XImageToIplImage(image);
 
-				cvShowImage("capture", outputImage);
-
 				cv::Mat mat = cv::cvarrToMat(outputImage);
 
 				gettimeofday(&now, NULL);
-				if ((active = markActiveCharacter(mat)) != -1
-				    && attackCommandIsDisplayed(mat)
-				    && DIFF(now, previousCommandTime) > 100*1000) {
-					if (sendCommand(active, mat) == 0) {
-						gettimeofday(&previousCommandTime, NULL);
+
+				active = markActiveCharacter(mat);
+
+				if (active != -1) {
+					if (attackCommandIsDisplayed(mat) && !preparingRefresh) {
+						after(&now, &attackStart, 100000);
+						preparingRefresh = true;
+					}
+
+					if (preparingRefresh && DIFF(now, attackStart) >= 0) {
+						sendCommand(active, mat);
+						preparingRefresh = false;
 					}
 				}
 
