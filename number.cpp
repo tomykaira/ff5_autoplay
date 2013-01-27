@@ -73,7 +73,7 @@ std::vector<int> findNumbers(cv::Mat &search_img0)
 
 	std::vector<NumberLocation> found;
 
-	for (double minScore = 1.0; minScore > 0.9; minScore -= 0.02) {
+	for (double minScore = 1.0; minScore > 0.8; minScore -= 0.02) {
 
 		for (int num = 0; num < 10; ++num) {
 			char template_file[1024];
