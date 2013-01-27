@@ -9,6 +9,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <X11/Xlib.h>
+#include <X11/Xutil.h>
 #include <sys/time.h>
 
 #define DIFF(end, start) (((end).tv_sec - (start).tv_sec)*1000*1000 + (end).tv_usec - (start).tv_usec)
@@ -28,27 +29,25 @@ void after(const struct timeval * from, struct timeval * to, int diff)
 }
 
 /* dst is initialized with cvCreateImage(cvSize(src.width, src.height), IPL_DEPTH_8U, 3); */
-static IplImage * XImageToIplImage(const XImage *src)
+void XImageToCvMat(const XImage *src, cv::Mat& result)
 {
 	int x, y;
 	char *cp;
 	uint32_t pixel;
 
-	IplImage * dst = cvCreateImage(cvSize(src->width, src->height), IPL_DEPTH_8U, 3);
+	result.create(cv::Size(src->width, src->height), CV_8UC3);
 
 	for (y = 0;y < src->height;y++) {
 		cp = src->data + y * src->bytes_per_line;
 		for (x = 0;x < src->width;x++) {
 			pixel = *(uint32_t *)cp;
 
-			((uchar*)(dst->imageData + dst->widthStep*y))[x*3  ] = (pixel & 0x000000ff) >> 0;
-			((uchar*)(dst->imageData + dst->widthStep*y))[x*3+1] = (pixel & 0x0000ff00) >> 8;
-			((uchar*)(dst->imageData + dst->widthStep*y))[x*3+2] = (pixel & 0x00ff0000) >> 16;
+			result.data[(y*result.cols + x)*3] = (pixel & 0x000000ff) >> 0;
+			result.data[(y*result.cols + x)*3 + 1] = (pixel & 0x0000ff00) >> 8;
+			result.data[(y*result.cols + x)*3 + 2] = (pixel & 0x00ff0000) >> 16;
 			cp += 4;
 		}
 	}
-
-	return dst;
 }
 
 static
@@ -220,8 +219,6 @@ int main(int argc, char* argv[])
 	XWindowAttributes win_info;
 	XImage *image;
 
-	IplImage * outputImage;
-
 	int active;
 	cv::Mat mat;
 
@@ -251,40 +248,29 @@ int main(int argc, char* argv[])
 
 		if (image != NULL)
 		{
-			if (image->bits_per_pixel == 32) {
-				outputImage = XImageToIplImage(image);
+			XImageToCvMat(image, mat);
+			XDestroyImage(image);
 
-				mat = cv::cvarrToMat(outputImage);
+			gettimeofday(&now, NULL);
 
-				gettimeofday(&now, NULL);
+			active = markActiveCharacter(mat);
 
-				active = markActiveCharacter(mat);
-
-				if (active != -1) {
-					std::cout << "Active " << active << std::endl;
-					if (attackCommandIsDisplayed(mat) && !preparingRefresh) {
-						std::cout << "Preparing" << std::endl;
-
-						after(&now, &attackStart, 100000);
-						preparingRefresh = true;
-					}
-
-					if (preparingRefresh && DIFF(now, attackStart) >= 0) {
-						std::cout << "executing" << std::endl;
-
-						sendCommand(active, mat);
-						preparingRefresh = false;
-					}
+			if (active != -1) {
+				if (attackCommandIsDisplayed(mat) && !preparingRefresh) {
+					after(&now, &attackStart, 100000);
+					preparingRefresh = true;
 				}
 
-				cv::imshow("markup", mat);
-
-				cvReleaseImage(&outputImage);
-			} else {
-				fprintf(stderr, "Not Supported format : bits_per_pixel = %d\n", image->bits_per_pixel);
-				return(1);
+				if (preparingRefresh && DIFF(now, attackStart) >= 0) {
+					sendCommand(active, mat);
+					preparingRefresh = false;
+				}
 			}
-			XFree(image);
+
+			cv::imshow("markup", mat);
+		} else {
+			std::cerr << "XGetImage returns null" << std::endl;
+			return 1;
 		}
 	}
 
