@@ -8,7 +8,7 @@ OBJS=$(patsubst %.cpp,%.o,$(SRC))
 DEPENDS=$(patsubst %.cpp,%.d,$(SRC))
 
 $(PROG): $(OBJS)
-	$(CC) -o $@ $(OBJS) $(OPENCV_OPTS) -ldbus-1
+	$(CC) -o $@ $(OBJS) $(OPENCV_OPTS) -ldbus-1 -lboost_thread-mt
 
 .c.o:
 	$(CC) $(CFLAGS) -c $<

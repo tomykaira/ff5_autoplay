@@ -10,4 +10,6 @@ void writeXImageToP3File(XImage *image, const char *file_path);
 
 void XImageToCvMat(const XImage *src, cv::Mat& result);
 
+void updateGameMatrix(const bool * live, cv::Mat * mat);
+
 #endif /* _XLIB_EXT_H_ */

@@ -12,6 +12,9 @@
 #include <X11/Xutil.h>
 #include <sys/time.h>
 
+#include <boost/thread.hpp>
+#include <boost/bind.hpp>
+
 #include <opencv2/highgui/highgui.hpp>
 
 #include "xlib_ext.hpp"
@@ -76,25 +79,14 @@ int sendCommand(int activeCharacter, cv::Mat mat)
 
 int main(int argc, char* argv[])
 {
-	Display* display;
-	int screen;
-	Window rootWindow, targetWindow;
-	XWindowAttributes win_info;
-	XImage *image;
-	const char * ffWindowName = "\"FINAL FANTASY 5\" Snes9x: Linux: 1.53";
 
-	cv::Mat mat;
+	cv::Mat rawImage, mat;
+
+	bool live = true;
 
 	int active;
 	bool autoControl = true;
 
-	display = XOpenDisplay("");
-	screen = DefaultScreen(display);
-	rootWindow = RootWindow(display, screen);
-
-	targetWindow = windowWithName(display, rootWindow, ffWindowName);
-
-	XGetWindowAttributes(display, targetWindow, &win_info);
 
 	if (dbusInit() != 0) {
 		fprintf(stderr, "DBus initialization failed");
@@ -104,45 +96,38 @@ int main(int argc, char* argv[])
 	bool preparingRefresh = false;
 	struct timeval attackStart, now;
 
+	boost::thread updateMatrixThread = boost::thread(updateGameMatrix, &live, &rawImage);
+
 	while (1) {
 
-		image = XGetImage(display, targetWindow,
-			0, 0, win_info.width, win_info.height,
-			AllPlanes, ZPixmap);
+		if (rawImage.empty())
+			continue;
 
-		if (image != NULL)
-		{
-			XImageToCvMat(image, mat);
-			XDestroyImage(image);
+		mat = rawImage.clone();
 
-			gettimeofday(&now, NULL);
+		gettimeofday(&now, NULL);
 
-			boost::optional<cv::Point> index = findIndexLocation(mat);
-			if (index)
-				std::cout << *index << std::endl;
-			else
-				std::cout << "n/a" << std::endl;
+		boost::optional<cv::Point> index = findIndexLocation(mat);
+		if (index)
+			std::cout << *index << std::endl;
+		else
+			std::cout << "n/a" << std::endl;
 
-			active = markActiveCharacter(mat);
+		active = markActiveCharacter(mat);
 
-			if (autoControl && active != -1) {
-				if (attackCommandIsDisplayed(mat) && !preparingRefresh) {
-					after(&now, &attackStart, 100000);
-					preparingRefresh = true;
-				}
-
-				if (preparingRefresh && DIFF(now, attackStart) >= 0) {
-					sendCommand(active, mat);
-					preparingRefresh = false;
-				}
+		if (autoControl && active != -1) {
+			if (attackCommandIsDisplayed(mat) && !preparingRefresh) {
+				after(&now, &attackStart, 100000);
+				preparingRefresh = true;
 			}
 
-			cv::imshow("markup", mat);
-		} else {
-			std::cerr << "XGetImage returns null" << std::endl;
-			XCloseDisplay(display);
-			return 1;
+			if (preparingRefresh && DIFF(now, attackStart) >= 0) {
+				sendCommand(active, mat);
+				preparingRefresh = false;
+			}
 		}
+
+		cv::imshow("markup", mat);
 
 		switch (cvWaitKey(10) & 0xff) {
 		case 'q':
@@ -158,14 +143,7 @@ int main(int argc, char* argv[])
 			break;
 
 		case 'd':
-			image = XGetImage(display, targetWindow,
-			                  0, 0, win_info.width, win_info.height,
-			                  AllPlanes, ZPixmap);
-
-			if (image != NULL) {
-				writeXImageToP3File(image, "dump.ppm");
-				XDestroyImage(image);
-			}
+			cv::imwrite("dump.bmp", rawImage);
 			break;
 
 		}
@@ -173,6 +151,7 @@ int main(int argc, char* argv[])
 
  end:
 
-	XCloseDisplay(display);
+	live = false;
+	updateMatrixThread.join();
 	return 0;
 }

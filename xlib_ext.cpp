@@ -1,5 +1,6 @@
-#include <X11/Xutil.h>
+#include <iostream>
 #include <stdio.h>
+#include <X11/Xutil.h>
 #include "xlib_ext.hpp"
 
 /* dst is initialized with cvCreateImage(cvSize(src.width, src.height), IPL_DEPTH_8U, 3); */
@@ -79,4 +80,41 @@ Window windowWithName(
 	}
 	if (children) XFree ((char *)children);
 	return(w);
+}
+
+// update content of matrix
+void updateGameMatrix(const bool * live, cv::Mat * mat)
+{
+	const char * ffWindowName = "\"FINAL FANTASY 5\" Snes9x: Linux: 1.53";
+
+	Display* display;
+	int screen;
+	Window rootWindow, targetWindow;
+	XWindowAttributes win_info;
+	XImage *image;
+
+	display = XOpenDisplay("");
+	screen = DefaultScreen(display);
+	rootWindow = RootWindow(display, screen);
+
+	targetWindow = windowWithName(display, rootWindow, ffWindowName);
+
+	XGetWindowAttributes(display, targetWindow, &win_info);
+
+	while (*live) {
+		image = XGetImage(display, targetWindow,
+			0, 0, win_info.width, win_info.height,
+			AllPlanes, ZPixmap);
+
+		if (image != NULL)
+		{
+			XImageToCvMat(image, *mat);
+			XDestroyImage(image);
+		} else {
+			std::cerr << "XGetImage returns null" << std::endl;
+			XCloseDisplay(display);
+			return;
+		}
+	}
+	XCloseDisplay(display);
 }
