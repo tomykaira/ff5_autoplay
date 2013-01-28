@@ -3,6 +3,9 @@
 #include <unistd.h>
 #include <dbus/dbus.h>
 
+#include "dbus_client.hpp"
+#include "recognition.hpp"
+
 static DBusConnection* conn;
 
 int dbusInit()
@@ -42,15 +45,16 @@ void dbusDisconnect()
 	dbus_connection_close(conn);
 }
 
-void dbusSendButton(const char * button)
+void dbusCallMethod(bool isButton, const char * methodName)
 {
 	DBusMessage* msg;
 	DBusPendingCall* pending;
+	const char * interface = isButton ? "com.snes9x.emulator.Joypad" : "com.snes9x.emulator";
 
-	msg = dbus_message_new_method_call("com.snes9x.emulator", // target for the method call
-	                                   "/", // object to call on
-	                                   "com.snes9x.emulator.Joypad", // interface to call on
-	                                   button); // method name
+	msg = dbus_message_new_method_call("com.snes9x.emulator",
+	                                   "/",
+	                                   interface,
+	                                   methodName);
 	if (NULL == msg) {
 		fprintf(stderr, "Message Null\n");
 		return;
@@ -69,63 +73,72 @@ void dbusSendButton(const char * button)
 
 	// free message
 	dbus_message_unref(msg);
-
-	usleep(1000*1000);
 }
 
-void selectNthCaracter(int characterId)
+void pressButton(cv::Mat * rawImage, std::string button)
+{
+	boost::optional<cv::Point> indexPosition;
+	while ((indexPosition = findIndexLocation(*rawImage)) == NULL)
+		usleep(1000); // until index is found
+
+	dbusCallMethod(true, button.c_str());
+	while (findIndexLocation(*rawImage) == indexPosition)
+		usleep(1000); // until index move
+}
+
+void selectNthCaracter(cv::Mat * rawImage, int characterId)
 {
 	if (characterId < 3) {
 		for (int i = 0; i < characterId; ++i) {
-			dbusSendButton("Down");
+			pressButton(rawImage, "Down");
 		}
 	} else {
-		dbusSendButton("Up");
+		pressButton(rawImage, "Up");
 	}
 }
 
-void attack()
+void attack(cv::Mat * rawImage)
 {
 	std::cout << "たたかう" << std::endl;
-	dbusSendButton("A");
-	dbusSendButton("A");
+	pressButton(rawImage, "A");
+	pressButton(rawImage, "A");
 }
 
-void attackParty(int characterId)
+void attackParty(cv::Mat * rawImage, int characterId)
 {
 	std::cout << "たたかう to " << characterId << std::endl;
-	dbusSendButton("A");
-	dbusSendButton("Right");
-	selectNthCaracter(characterId);
-	dbusSendButton("A");
+	pressButton(rawImage, "A");
+	pressButton(rawImage, "Right");
+	selectNthCaracter(rawImage, characterId);
+	pressButton(rawImage, "A");
 }
 
-void heal(int characterId)
+void heal(cv::Mat * rawImage, int characterId)
 {
 	std::cout << "ケアル to " << characterId << std::endl;
-	dbusSendButton("Down");
-	dbusSendButton("Down");
-	dbusSendButton("A");
-	dbusSendButton("A");
-	selectNthCaracter(characterId);
-	dbusSendButton("A");
+	pressButton(rawImage, "Down");
+	pressButton(rawImage, "Down");
+	pressButton(rawImage, "A");
+	pressButton(rawImage, "A");
+	selectNthCaracter(rawImage, characterId);
+	pressButton(rawImage, "A");
 }
 
-void throwPotion(int characterId)
+void throwPotion(cv::Mat * rawImage, int characterId)
 {
 	std::cout << "ポーション to " << characterId << std::endl;
-	dbusSendButton("Up");
-	dbusSendButton("A");
-	dbusSendButton("A");
-	dbusSendButton("A");
-	selectNthCaracter(characterId);
-	dbusSendButton("A");
+	pressButton(rawImage, "Up");
+	pressButton(rawImage, "A");
+	pressButton(rawImage, "A");
+	pressButton(rawImage, "A");
+	selectNthCaracter(rawImage, characterId);
+	pressButton(rawImage, "A");
 }
 
-void selectNth(int id)
+void selectNth(cv::Mat * rawImage, int id)
 {
 	for (int i = 0; i < id; ++i) {
-		dbusSendButton("Down");
+		pressButton(rawImage, "Down");
 	}
-	dbusSendButton("A");
+	pressButton(rawImage, "A");
 }

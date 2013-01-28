@@ -31,7 +31,7 @@ void after(const struct timeval * from, struct timeval * to, int diff)
 	to->tv_sec  = from->tv_sec + new_usec / (1000*1000);
 }
 
-int sendCommand(int activeCharacter, cv::Mat mat)
+int sendCommand(int activeCharacter, cv::Mat mat, cv::Mat * rawImage)
 {
 	cv::Mat hpArea = mat(cv::Rect(332, 320, 72, 120));
 	std::vector<int> HPs = findNumbers(hpArea);
@@ -58,19 +58,19 @@ int sendCommand(int activeCharacter, cv::Mat mat)
 	switch (activeCharacter) {
 	case 0:
 		std::cout << "ファリス" << std::endl;
-		attack();
+		boost::thread(attack, rawImage);
 		break;
 	case 1: // レナ
 		std::cout << "レナ" << std::endl;
-		attackParty(lowestHPCharacter);
+		boost::thread(attackParty, rawImage, lowestHPCharacter);
 		break;
 	case 2: // ガラフ
 		std::cout << "ガラフ" << std::endl;
-		attack();
+		boost::thread(attack, rawImage);
 		break;
 	case 3: // バッツ
 		std::cout << "バッツ" << std::endl;
-		attack();
+		boost::thread(attack, rawImage);
 		break;
 	}
 
@@ -122,7 +122,7 @@ int main(int argc, char* argv[])
 			}
 
 			if (preparingRefresh && DIFF(now, attackStart) >= 0) {
-				sendCommand(active, mat);
+				sendCommand(active, mat, &rawImage);
 				preparingRefresh = false;
 			}
 		}
