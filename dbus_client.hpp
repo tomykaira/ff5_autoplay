@@ -7,6 +7,7 @@
 
 int dbusInit();
 void dbusDisconnect();
+void dbusCallMethod(bool isButton, const char * methodName);
 
 void selectNth(cv::Mat * rawImage, int id);
 

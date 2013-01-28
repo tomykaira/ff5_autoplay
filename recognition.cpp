@@ -8,6 +8,18 @@
 
 static const cv::Mat TEMPLATE_ATTACK = cv::imread("templates/attack.bmp", 1);
 static const cv::Mat TEMPLATE_INDEX = cv::imread("templates/index.bmp", 0);
+static const cv::Mat TEMPLATE_WON = cv::imread("templates/won.bmp", 1);
+
+bool templateIn(cv::Mat mat, cv::Rect roi, const cv::Mat temp)
+{
+	cv::Mat result;
+	cv::matchTemplate(mat(roi), temp, result, CV_TM_CCOEFF_NORMED);
+
+	double maxScore;
+	cv::minMaxLoc(result, NULL, &maxScore, NULL, NULL);
+
+	return maxScore > 0.95;
+}
 
 // cv::Rect(16, 0, 480, 448)    : full play area
 // cv::Rect(16, 320, 480, 120)  : command area (outer bound)
@@ -16,21 +28,58 @@ static const cv::Mat TEMPLATE_INDEX = cv::imread("templates/index.bmp", 0);
 // cv::Rect(224, 320, 272, 120) : character status
 // cv::Rect(332, 320, 72, 120)  : hp area
 
-int attackCommandIsDisplayed(cv::Mat mat)
+bool inBattle(cv::Mat mat)
 {
-	cv::Mat commandArea = mat(cv::Rect(112, 320, 112, 120));
-	cv::Mat result;
+	cv::Mat battleGraphicArea = mat(cv::Rect(16, 0, 480, 320));
+	cv::Mat battleInfoArea = mat(cv::Rect(16, 320, 480, 120));
 
-	cv::matchTemplate(commandArea, TEMPLATE_ATTACK, result, CV_TM_CCOEFF_NORMED);
+	int graphicCount = 0, infoCount = 0;
 
-	double maxScore;
-	cv::Point point;
-	cv::Rect roi(0, 0, TEMPLATE_ATTACK.cols, TEMPLATE_ATTACK.rows);
-	cv::minMaxLoc(result, NULL, &maxScore, NULL, &point);
-	roi.x = point.x;
-	roi.y = point.y;
+	cv::Mat_<uint32_t>::iterator it = battleGraphicArea.begin<uint32_t>();
+	for(; it!=battleGraphicArea.end<uint32_t>(); ++it) {
+		if ((*it & 0xffffff) == 128)
+			++ graphicCount;
+	}
 
-	return maxScore > 0.95;
+	it = battleInfoArea.begin<uint32_t>();
+	for(; it!=battleInfoArea.end<uint32_t>(); ++it) {
+		if ((*it & 0xffffff) == 128)
+			++ infoCount;
+	}
+
+	return infoCount > 30000 && graphicCount < 5000;
+}
+
+bool inField(cv::Mat mat)
+{
+	cv::Mat battleGraphicArea = mat(cv::Rect(16, 0, 480, 320));
+	cv::Mat battleInfoArea = mat(cv::Rect(16, 320, 480, 120));
+
+	int graphicCount = 0, infoCount = 0;
+
+	cv::Mat_<uint32_t>::iterator it = battleGraphicArea.begin<uint32_t>();
+	for(; it!=battleGraphicArea.end<uint32_t>(); ++it) {
+		if ((*it & 0xffffff) == 128)
+			++ graphicCount;
+	}
+
+	it = battleInfoArea.begin<uint32_t>();
+	for(; it!=battleInfoArea.end<uint32_t>(); ++it) {
+		if ((*it & 0xffffff) == 128)
+			++ infoCount;
+	}
+
+	return infoCount < 5000 && graphicCount < 5000;
+}
+
+bool afterBattle(cv::Mat mat)
+{
+	return templateIn(mat, cv::Rect(48, 26, 170, 24), TEMPLATE_WON);
+}
+
+bool attackCommandIsDisplayed(cv::Mat mat)
+{
+	return templateIn(mat, cv::Rect(112, 320, 112, 120), TEMPLATE_ATTACK);
 }
 
 int markActiveCharacter(cv::Mat mat)

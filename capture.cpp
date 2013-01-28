@@ -52,15 +52,14 @@ int sendCommand(int activeCharacter, cv::Mat mat, cv::Mat * rawImage)
 		attack(rawImage);
 		break;
 	case 1:
-		std::cout << "クルル" << std::endl;
-		if (lowestHP < 500) {
-			std::vector<int> ids { 2, 2, lowestHPCharacter };
-			command(rawImage, ids);
-		} else {
-			attack(rawImage);
-		}
+		std::cout << "レナ" << std::endl;
+		attackParty(rawImage, lowestHPCharacter);
 		break;
 	case 2:
+		std::cout << "クルル" << std::endl;
+		attack(rawImage);
+		break;
+	case 3:
 		std::cout << "バッツ" << std::endl;
 		attack(rawImage);
 		break;
@@ -79,6 +78,7 @@ int main(int argc, char* argv[])
 	int active;
 	bool autoControl = true;
 
+	bool skippingResult = false;
 
 	if (dbusInit() != 0) {
 		fprintf(stderr, "DBus initialization failed");
@@ -94,11 +94,28 @@ int main(int argc, char* argv[])
 
 		mat = rawImage.clone();
 
-		active = markActiveCharacter(mat);
+		if (autoControl) {
+			if (inBattle(mat)) {
+				active = markActiveCharacter(mat);
 
-		if (autoControl && active != -1) {
-			if (attackCommandIsDisplayed(mat) && findIndexLocation(mat)) {
-				sendCommand(active, mat, &rawImage);
+				if (active != -1) {
+					if (attackCommandIsDisplayed(mat) && findIndexLocation(mat)) {
+						sendCommand(active, mat, &rawImage);
+					}
+				}
+			} else if (inField(mat)) {
+				skippingResult = false;
+				if (time(NULL) % 2) {
+					dbusCallMethod(true, "Left");
+				} else {
+					dbusCallMethod(true, "Right");
+				}
+			} else if (afterBattle(mat)) {
+				skippingResult = true;
+				dbusCallMethod(false, "QuickSave008");
+			}
+			if (skippingResult) {
+				dbusCallMethod(true, "A");
 			}
 		}
 
