@@ -1,7 +1,10 @@
 #include <iostream>
 #include <stdio.h>
+#include <unistd.h>
 #include <X11/Xutil.h>
+
 #include "xlib_ext.hpp"
+#include "time_util.hpp"
 
 /* dst is initialized with cvCreateImage(cvSize(src.width, src.height), IPL_DEPTH_8U, 3); */
 void XImageToCvMat(const XImage *src, cv::Mat& result)
@@ -101,7 +104,18 @@ void updateGameMatrix(const bool * live, cv::Mat * mat)
 
 	XGetWindowAttributes(display, targetWindow, &win_info);
 
+  struct timeval nextTick, now;
+
+  gettimeofday(&nextTick, NULL);
+
 	while (*live) {
+    do {
+      usleep(1000);
+      gettimeofday(&now, NULL);
+    } while (DIFF(nextTick, now) > 0);
+
+    after(&now, &nextTick, 100*1000);
+
 		image = XGetImage(display, targetWindow,
 			0, 0, win_info.width, win_info.height,
 			AllPlanes, ZPixmap);

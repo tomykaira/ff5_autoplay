@@ -10,7 +10,6 @@
 #include <stdlib.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
-#include <sys/time.h>
 
 #include <boost/thread.hpp>
 #include <boost/bind.hpp>
@@ -21,15 +20,7 @@
 #include "number.hpp"
 #include "dbus_client.hpp"
 #include "recognition.hpp"
-
-#define DIFF(end, start) (((end).tv_sec - (start).tv_sec)*1000*1000 + (end).tv_usec - (start).tv_usec)
-
-void after(const struct timeval * from, struct timeval * to, int diff)
-{
-	int new_usec = from->tv_usec + diff;
-	to->tv_usec = new_usec % (1000*1000);
-	to->tv_sec  = from->tv_sec + new_usec / (1000*1000);
-}
+#include "time_util.hpp"
 
 int sendCommand(int activeCharacter, cv::Mat mat, cv::Mat * rawImage)
 {
