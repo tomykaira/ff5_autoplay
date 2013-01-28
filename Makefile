@@ -3,7 +3,7 @@ OPENCV_OPTS=-lopencv_gpu -lopencv_contrib -lopencv_legacy -lopencv_objdetect -lo
 CPPFLAGS=-g -Wall -I/usr/include/dbus-1.0/ -I/usr/lib/i386-linux-gnu/dbus-1.0/include/
 
 PROG=capture
-SRC=capture.cpp number.cpp dbus_client.cpp xlib_ext.cpp
+SRC=capture.cpp number.cpp dbus_client.cpp xlib_ext.cpp recognition.cpp
 OBJS=$(patsubst %.cpp,%.o,$(SRC))
 DEPENDS=$(patsubst %.cpp,%.d,$(SRC))
 
