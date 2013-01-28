@@ -49,19 +49,19 @@ int sendCommand(int activeCharacter, cv::Mat mat, cv::Mat * rawImage)
 	switch (activeCharacter) {
 	case 0:
 		std::cout << "ファリス" << std::endl;
-		boost::thread(attack, rawImage);
+		attack(rawImage);
 		break;
 	case 1: // レナ
 		std::cout << "レナ" << std::endl;
-		boost::thread(attackParty, rawImage, lowestHPCharacter);
+		attackParty(rawImage, lowestHPCharacter);
 		break;
 	case 2: // ガラフ
 		std::cout << "ガラフ" << std::endl;
-		boost::thread(attack, rawImage);
+		attack(rawImage);
 		break;
 	case 3: // バッツ
 		std::cout << "バッツ" << std::endl;
-		boost::thread(attack, rawImage);
+		attack(rawImage);
 		break;
 	}
 
@@ -84,9 +84,6 @@ int main(int argc, char* argv[])
 		return 1;
 	}
 
-	bool preparingRefresh = false;
-	struct timeval attackStart, now;
-
 	boost::thread updateMatrixThread = boost::thread(updateGameMatrix, &live, &rawImage);
 
 	while (1) {
@@ -96,25 +93,11 @@ int main(int argc, char* argv[])
 
 		mat = rawImage.clone();
 
-		gettimeofday(&now, NULL);
-
-		boost::optional<cv::Point> index = findIndexLocation(mat);
-		if (index)
-			std::cout << *index << std::endl;
-		else
-			std::cout << "n/a" << std::endl;
-
 		active = markActiveCharacter(mat);
 
 		if (autoControl && active != -1) {
-			if (attackCommandIsDisplayed(mat) && !preparingRefresh) {
-				after(&now, &attackStart, 100000);
-				preparingRefresh = true;
-			}
-
-			if (preparingRefresh && DIFF(now, attackStart) >= 0) {
+			if (attackCommandIsDisplayed(mat) && findIndexLocation(mat)) {
 				sendCommand(active, mat, &rawImage);
-				preparingRefresh = false;
 			}
 		}
 
