@@ -276,7 +276,11 @@ int main(int argc, char* argv[])
 			goto end;
 
 		case 's':
-			std::cout << "Toggle auto control" << std::endl;
+			if (autoControl) {
+				std::cout << "Turn OFF auto control" << std::endl;
+			} else {
+				std::cout << "Turn ON auto control" << std::endl;
+			}
 			autoControl = !autoControl;
 			break;
 
