@@ -12,7 +12,7 @@
 #include <X11/Xutil.h>
 #include <sys/time.h>
 
-#define DIFF(end, start) (((end).tv_sec - (start).tv_sec)*1000*1000 + (end).tv_usec - (start).tv_usec)
+#include <boost/optional.hpp>
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
@@ -20,6 +20,11 @@
 
 #include "number.hpp"
 #include "dbus_client.hpp"
+
+#define DIFF(end, start) (((end).tv_sec - (start).tv_sec)*1000*1000 + (end).tv_usec - (start).tv_usec)
+
+const cv::Mat TEMPLATE_ATTACK = cv::imread("templates/attack.bmp", 1);
+const cv::Mat TEMPLATE_INDEX = cv::imread("templates/index.bmp", 0);
 
 void after(const struct timeval * from, struct timeval * to, int diff)
 {
@@ -115,18 +120,16 @@ Window windowWithName(
 // cv::Rect(224, 320, 272, 120) : character status
 // cv::Rect(332, 320, 72, 120)  : hp area
 
-cv::Mat templateImage = cv::imread("templates/attack.bmp", 1);
-
 int attackCommandIsDisplayed(cv::Mat mat)
 {
 	cv::Mat commandArea = mat(cv::Rect(112, 320, 112, 120));
 	cv::Mat result;
 
-	cv::matchTemplate(commandArea, templateImage, result, CV_TM_CCOEFF_NORMED);
+	cv::matchTemplate(commandArea, TEMPLATE_ATTACK, result, CV_TM_CCOEFF_NORMED);
 
 	double maxScore;
 	cv::Point point;
-	cv::Rect roi(0, 0, templateImage.cols, templateImage.rows);
+	cv::Rect roi(0, 0, TEMPLATE_ATTACK.cols, TEMPLATE_ATTACK.rows);
 	cv::minMaxLoc(result, NULL, &maxScore, NULL, &point);
 	roi.x = point.x;
 	roi.y = point.y;
@@ -159,6 +162,31 @@ int markActiveCharacter(cv::Mat mat)
 
 	return -1;
 
+}
+
+boost::optional<cv::Point> findIndexLocation(cv::Mat mat)
+{
+	std::vector<cv::Mat> input(3), zeros(3);
+	cv::Mat black, result;
+
+	cv::split(mat, input);
+
+	for (int i = 0; i < 3; ++i) {
+		cv::threshold(input[i], zeros[i], 0, 255, cv::THRESH_BINARY_INV);
+	}
+
+	cv::bitwise_and(zeros[0], zeros[1], black);
+	cv::bitwise_and(black, zeros[2], black);
+
+	double maxScore;
+	cv::Point point;
+	cv::matchTemplate(black, TEMPLATE_INDEX, result, CV_TM_CCOEFF_NORMED);
+	cv::minMaxLoc(result, NULL, &maxScore, NULL, &point);
+
+	if (maxScore > 0.8)
+		return point;
+	else
+		return boost::none;
 }
 
 int sendCommand(int activeCharacter, cv::Mat mat)
@@ -249,6 +277,12 @@ int main(int argc, char* argv[])
 			XDestroyImage(image);
 
 			gettimeofday(&now, NULL);
+
+			boost::optional<cv::Point> index = findIndexLocation(mat);
+			if (index)
+				std::cout << *index << std::endl;
+			else
+				std::cout << "n/a" << std::endl;
 
 			active = markActiveCharacter(mat);
 
