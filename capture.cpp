@@ -51,15 +51,16 @@ int sendCommand(int activeCharacter, cv::Mat mat, cv::Mat * rawImage)
 		std::cout << "ファリス" << std::endl;
 		attack(rawImage);
 		break;
-	case 1: // レナ
-		std::cout << "レナ" << std::endl;
-		attackParty(rawImage, lowestHPCharacter);
+	case 1:
+		std::cout << "クルル" << std::endl;
+		if (lowestHP < 500) {
+			std::vector<int> ids { 2, 2, lowestHPCharacter };
+			command(rawImage, ids);
+		} else {
+			attack(rawImage);
+		}
 		break;
-	case 2: // ガラフ
-		std::cout << "ガラフ" << std::endl;
-		attack(rawImage);
-		break;
-	case 3: // バッツ
+	case 2:
 		std::cout << "バッツ" << std::endl;
 		attack(rawImage);
 		break;

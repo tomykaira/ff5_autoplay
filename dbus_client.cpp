@@ -113,6 +113,23 @@ void attackParty(cv::Mat * rawImage, int characterId)
 	pressButton(rawImage, "A");
 }
 
+void command(cv::Mat * rawImage, std::vector<int> ids)
+{
+	std::cout << "コマンド ";
+
+	std::vector<int>::iterator it = ids.begin();
+	while (it != ids.end()) {
+		std::cout << *it << " ";
+		std::cout.flush();
+		for (int i = 0; i < *it; ++i) {
+			pressButton(rawImage, "Down");
+		}
+		pressButton(rawImage, "A");
+		++it;
+	}
+	std::cout << std::endl;
+}
+
 void heal(cv::Mat * rawImage, int characterId)
 {
 	std::cout << "ケアル to " << characterId << std::endl;

@@ -79,7 +79,7 @@ boost::optional<cv::Point> findIndexLocation(cv::Mat mat)
 	cv::matchTemplate(black, TEMPLATE_INDEX, result, CV_TM_CCOEFF_NORMED);
 	cv::minMaxLoc(result, NULL, &maxScore, NULL, &point);
 
-	if (maxScore > 0.8)
+	if (maxScore > 0.7)
 		return point;
 	else
 		return boost::none;
