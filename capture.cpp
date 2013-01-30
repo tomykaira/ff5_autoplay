@@ -21,6 +21,7 @@
 #include "dbus_client.hpp"
 #include "recognition.hpp"
 #include "time_util.hpp"
+#include "dungeon.hpp"
 
 int sendCommand(int activeCharacter, cv::Mat mat, cv::Mat * rawImage)
 {
@@ -95,30 +96,9 @@ int main(int argc, char* argv[])
 
 		mat = rawImage.clone();
 
-		if (autoBattle || autoLevelUp) {
-			if (inBattle(mat)) {
-				active = markActiveCharacter(mat);
-
-				if (active != -1) {
-					if (attackCommandIsDisplayed(mat) && findIndexLocation(mat)) {
-						sendCommand(active, mat, &rawImage);
-					}
-				}
-			} else if (autoLevelUp && inField(mat)) {
-				drawGrid(mat);
-				skippingResult = false;
-				if (time(NULL) % 2) {
-					dbusCallMethod(true, "Left");
-				} else {
-					dbusCallMethod(true, "Right");
-				}
-			} else if (autoLevelUp && afterBattle(mat)) {
-				skippingResult = true;
-				dbusCallMethod(false, "QuickSave008");
-			}
-			if (skippingResult) {
-				dbusCallMethod(true, "A");
-			}
+		if (inField(mat)) {
+			drawGrid(mat);
+			markGround(mat);
 		}
 
 		cv::imshow("markup", mat);
