@@ -17,7 +17,7 @@ $(PROG): $(OBJS)
 clean:
 	-$(RM) $(PROG) $(OBJS) $(DEPENDS)
 
-%.d: %.c
+%.d: %.cpp
 	@set -e; $(CC) -MM $(CPPFLAGS) $< \
 		| sed 's/\($*\)\.o[ :]*/\1.o $@ : /g' > $@; \
 		[ -s $@ ] || rm -f $@
