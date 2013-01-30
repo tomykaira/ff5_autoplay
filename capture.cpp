@@ -76,7 +76,7 @@ int main(int argc, char* argv[])
 	bool live = true;
 
 	int active;
-	bool autoControl = true;
+	bool autoBattle = true, autoLevelUp = false;
 
 	bool skippingResult = false;
 
@@ -94,7 +94,7 @@ int main(int argc, char* argv[])
 
 		mat = rawImage.clone();
 
-		if (autoControl) {
+		if (autoBattle || autoLevelUp) {
 			if (inBattle(mat)) {
 				active = markActiveCharacter(mat);
 
@@ -103,14 +103,15 @@ int main(int argc, char* argv[])
 						sendCommand(active, mat, &rawImage);
 					}
 				}
-			} else if (inField(mat)) {
+			} else if (autoLevelUp && inField(mat)) {
+				drawGrid(mat);
 				skippingResult = false;
 				if (time(NULL) % 2) {
 					dbusCallMethod(true, "Left");
 				} else {
 					dbusCallMethod(true, "Right");
 				}
-			} else if (afterBattle(mat)) {
+			} else if (autoLevelUp && afterBattle(mat)) {
 				skippingResult = true;
 				dbusCallMethod(false, "QuickSave008");
 			}
@@ -126,12 +127,21 @@ int main(int argc, char* argv[])
 			goto end;
 
 		case 's':
-			if (autoControl) {
-				std::cout << "Turn OFF auto control" << std::endl;
+			if (autoBattle) {
+				std::cout << "Turn OFF auto battle" << std::endl;
 			} else {
-				std::cout << "Turn ON auto control" << std::endl;
+				std::cout << "Turn ON auto battle" << std::endl;
 			}
-			autoControl = !autoControl;
+			autoBattle = !autoBattle;
+			break;
+
+		case 'l':
+			if (autoLevelUp) {
+				std::cout << "Turn OFF auto level up" << std::endl;
+			} else {
+				std::cout << "Turn ON auto level up" << std::endl;
+			}
+			autoLevelUp = !autoLevelUp;
 			break;
 
 		case 'd':
