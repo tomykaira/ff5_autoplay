@@ -22,6 +22,7 @@
 #include "recognition.hpp"
 #include "time_util.hpp"
 #include "dungeon.hpp"
+#include "dungeon/Map.hpp"
 
 int sendCommand(int activeCharacter, cv::Mat mat, cv::Mat * rawImage)
 {
@@ -84,7 +85,7 @@ int main(int argc, char* argv[])
 
 	boost::thread updateMatrixThread = boost::thread(updateGameMatrix, &live, &rawImage);
 
-	Map map;
+	dungeon::Map * map = NULL;
 
 	while (1) {
 
@@ -93,8 +94,8 @@ int main(int argc, char* argv[])
 
 		mat = rawImage.clone();
 
-		if (inField(mat)) {
-			map.detectSymbols(mat);
+		if (map && inField(mat)) {
+			map->detectSymbols(mat);
 		}
 
 		cv::imshow("markup", mat);
@@ -104,16 +105,16 @@ int main(int argc, char* argv[])
 			goto end;
 
 		case 'h':
-			map.move(LEFT);
+			map->move(LEFT);
 			break;
 		case 'j':
-			map.move(DOWN);
+			map->move(DOWN);
 			break;
 		case 'k':
-			map.move(UP);
+			map->move(UP);
 			break;
 		case 'l':
-			map.move(RIGHT);
+			map->move(RIGHT);
 			break;
 
 		case 'd':
@@ -121,12 +122,22 @@ int main(int argc, char* argv[])
 			break;
 
 		case 's':
-			map.debug();
+			map->debug();
+			break;
+
+		case 'r':
+			if (map) {
+				delete map;
+				map = NULL;
+			}
+			map = new dungeon::Map(cropGroundTemplate(mat));
 			break;
 		}
 	}
 
  end:
+
+	delete map;
 
 	live = false;
 	updateMatrixThread.join();
