@@ -77,12 +77,13 @@ void dbusCallMethod(bool isButton, const char * methodName)
 
 void pressButton(cv::Mat * rawImage, std::string button)
 {
+	time_t start = time(NULL);
 	boost::optional<cv::Point> indexPosition;
-	while ((indexPosition = findIndexLocation(*rawImage)) == NULL)
+	while ((indexPosition = findIndexLocation(*rawImage)) == NULL && time(NULL) - start < 2)
 		usleep(1000); // until index is found
 
 	dbusCallMethod(true, button.c_str());
-	while (findIndexLocation(*rawImage) == indexPosition)
+	while (findIndexLocation(*rawImage) == indexPosition && time(NULL) - start < 2)
 		usleep(1000); // until index move
 }
 
