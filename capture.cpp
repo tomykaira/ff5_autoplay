@@ -88,6 +88,7 @@ int main(int argc, char* argv[])
 	}
 
 	boost::thread updateMatrixThread = boost::thread(updateGameMatrix, &live, &rawImage);
+	LefthandMethod method;
 
 	while (1) {
 
@@ -99,6 +100,8 @@ int main(int argc, char* argv[])
 		if (inField(mat)) {
 			drawGrid(mat);
 			markGround(mat);
+			std::cout << method.tryStep(mat) << std::endl;
+
 		}
 
 		cv::imshow("markup", mat);
