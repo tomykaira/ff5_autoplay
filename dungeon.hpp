@@ -16,7 +16,7 @@ class LefthandMethod
 	cv::Mat previous;
 	Direction currentDirection;
 
-  void tryDirection(Direction direction);
+	void tryDirection(Direction direction);
 	void clearCharacter(cv::Mat mat);
 
 public:
