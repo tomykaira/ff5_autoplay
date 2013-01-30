@@ -26,6 +26,6 @@ class LefthandMethod;
 
 void drawGrid(cv::Mat mat);
 cv::Mat cropGroundTemplate(cv::Mat mat);
-bool movedTo(cv::Mat * rawImage, Direction direction);
+bool moveTo(cv::Mat * rawImage, Direction direction);
 
 #endif /* _DUNGEON_H_ */

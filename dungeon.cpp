@@ -1,4 +1,5 @@
 #include "dungeon.hpp"
+#include "dbus_client.hpp"
 
 int dx(Direction d)
 {
@@ -51,20 +52,42 @@ double difference(cv::Mat a, cv::Mat b)
 	return (double)changedPixels / (double)(diff.rows * diff.cols);
 }
 
-bool movedTo(cv::Mat * rawImage, Direction direction)
+bool moveTo(cv::Mat * rawImage, Direction direction)
 {
 	static const int MAX_WAIT_COUNT = 50;
+
+	std::string button;
+
+	switch (direction) {
+	case LEFT:
+		button = "Left";
+		break;
+	case UP:
+		button = "Up";
+		break;
+	case RIGHT:
+		button = "Right";
+		break;
+	case DOWN:
+		button = "Down";
+		break;
+	}
 
 	cv::Rect fromRect(32 + dx(direction)*16,
 	                  16 + dy(direction)*16,
 	                  448, 416);
-	cv::Rect toRect(32 - dx(direction)*16,
-	                16 - dy(direction)*16,
-	                448, 416);
+	cv::Rect   toRect(32 - dx(direction)*16,
+	                  16 - dy(direction)*16,
+	                  448, 416);
 
 	cv::Mat expected = (*rawImage)(fromRect).clone();
 	time_t start = time(NULL);
 	int waitCount = 0;
+
+	dbusCallMethod(true, button.c_str());
+	// break through a door
+	usleep(100*1000);
+	dbusCallMethod(true, button.c_str());
 
 	while (difference((*rawImage)(toRect), expected) > 0.1 && waitCount < MAX_WAIT_COUNT) {
 		waitCount++;

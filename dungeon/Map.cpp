@@ -5,7 +5,6 @@
 #include "dungeon.hpp"
 #include "dungeon/Map.hpp"
 #include "dungeon/Symbol.hpp"
-#include "dbus_client.hpp"
 
 namespace dungeon {
 
@@ -23,7 +22,7 @@ Map::Map(const cv::Mat groundTemplate) :
 
 	auto firstFloor = new Floor(this);
 	firstFloor->visit();
-	map[myY][myX] = firstFloor;
+	replace(myX, myY, firstFloor);
 }
 
 Map::~Map()
@@ -38,24 +37,12 @@ Map::~Map()
 
 void Map::move(cv::Mat * rawImage, Direction direction)
 {
-	switch (direction) {
-	case LEFT:
-		dbusCallMethod(true, "Left");
-		break;
-	case UP:
-		dbusCallMethod(true, "Up");
-		break;
-	case RIGHT:
-		dbusCallMethod(true, "Right");
-		break;
-	case DOWN:
-		dbusCallMethod(true, "Down");
-		break;
+	if (moveTo(rawImage, direction)) {
+		myX += dx(direction);
+		myY += dy(direction);
+	} else {
+		replace(myX + dx(direction), myY + dy(direction), new Block(this));
 	}
-	if (movedTo(rawImage, direction)) {
-    myX += dx(direction);
-    myY += dy(direction);
-  }
 }
 
 
@@ -83,14 +70,12 @@ void Map::detectSymbols(cv::Mat mat)
       }
 
       if (map[myY + (y - 7)][myX + (x - 7)]->isUnknown()) {
-        delete map[myY + (y - 7)][myX + (x - 7)];
-
         if (x == 7 && y == 7) {
-          map[myY][myX] = new Floor(this);
+          replace(myX, myY, new Floor(this));
         } else if (topScore > 0.95 || bottomScore > 0.95) {
-					map[myY + (y - 7)][myX + (x - 7)] = new Floor(this);
+          replace(myX + (x - 7), myY + (y - 7), new Floor(this));
 				} else {
-          map[myY + (y - 7)][myX + (x - 7)] = new Unidentified(this);
+          replace(myX + (x - 7), myY + (y - 7), new Unidentified(this));
         }
 			}
 		}
@@ -109,6 +94,13 @@ void Map::debug()
 		}
 		std::cout << std::endl;
 	}
+}
+
+
+void Map::replace(int x, int y, Symbol * s)
+{
+	delete map[y][x];
+	map[y][x] = s;
 }
 
 }

@@ -13,6 +13,8 @@ class Map
 
 	boost::multi_array<Symbol *, 2> map;
 
+	void replace(int x, int y, Symbol * s);
+
 public:
 	const cv::Mat groundTemplate;
 
