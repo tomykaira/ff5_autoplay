@@ -77,18 +77,14 @@ int main(int argc, char* argv[])
 
 	bool live = true;
 
-	int active;
-	bool autoBattle = true, autoLevelUp = false;
-
-	bool skippingResult = false;
-
 	if (dbusInit() != 0) {
 		fprintf(stderr, "DBus initialization failed");
 		return 1;
 	}
 
 	boost::thread updateMatrixThread = boost::thread(updateGameMatrix, &live, &rawImage);
-	LefthandMethod method;
+
+	Map map;
 
 	while (1) {
 
@@ -98,10 +94,7 @@ int main(int argc, char* argv[])
 		mat = rawImage.clone();
 
 		if (inField(mat)) {
-			drawGrid(mat);
-			markGround(mat);
-			std::cout << method.tryStep(mat) << std::endl;
-
+			map.detectSymbols(mat);
 		}
 
 		cv::imshow("markup", mat);
@@ -110,28 +103,26 @@ int main(int argc, char* argv[])
 		case 'q':
 			goto end;
 
-		case 's':
-			if (autoBattle) {
-				std::cout << "Turn OFF auto battle" << std::endl;
-			} else {
-				std::cout << "Turn ON auto battle" << std::endl;
-			}
-			autoBattle = !autoBattle;
+		case 'h':
+			map.move(LEFT);
 			break;
-
+		case 'j':
+			map.move(DOWN);
+			break;
+		case 'k':
+			map.move(UP);
+			break;
 		case 'l':
-			if (autoLevelUp) {
-				std::cout << "Turn OFF auto level up" << std::endl;
-			} else {
-				std::cout << "Turn ON auto level up" << std::endl;
-			}
-			autoLevelUp = !autoLevelUp;
+			map.move(RIGHT);
 			break;
 
 		case 'd':
 			cv::imwrite("dump.bmp", rawImage);
 			break;
 
+		case 's':
+			map.debug();
+			break;
 		}
 	}
 

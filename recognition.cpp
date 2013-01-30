@@ -55,21 +55,25 @@ bool inField(cv::Mat mat)
 	cv::Mat battleGraphicArea = mat(cv::Rect(16, 0, 480, 320));
 	cv::Mat battleInfoArea = mat(cv::Rect(16, 320, 480, 120));
 
-	int graphicCount = 0, infoCount = 0;
+	int graphicCount = 0, infoCount = 0, notBlack = 0;
 
 	cv::Mat_<uint32_t>::iterator it = battleGraphicArea.begin<uint32_t>();
 	for(; it!=battleGraphicArea.end<uint32_t>(); ++it) {
 		if ((*it & 0xffffff) == 128)
 			++ graphicCount;
+		if ((*it & 0xffffff) != 0)
+			++ notBlack;
 	}
 
 	it = battleInfoArea.begin<uint32_t>();
 	for(; it!=battleInfoArea.end<uint32_t>(); ++it) {
 		if ((*it & 0xffffff) == 128)
 			++ infoCount;
+		if ((*it & 0xffffff) != 0)
+			++ notBlack;
 	}
 
-	return infoCount < 5000 && graphicCount < 5000;
+	return infoCount < 5000 && graphicCount < 5000 && notBlack > 10240;
 }
 
 bool afterBattle(cv::Mat mat)
