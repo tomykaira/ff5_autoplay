@@ -17,7 +17,7 @@ Map::Map(const cv::Mat groundTemplate) :
 {
 	for (int y = 0; y < SIZE; ++y) {
 		for (int x = 0; x < SIZE; ++x) {
-			map[y][x] = new Symbol(this);
+			map[y][x] = new Unseen(this);
 		}
 	}
 
@@ -36,27 +36,26 @@ Map::~Map()
 }
 
 
-void Map::move(Direction direction)
+void Map::move(cv::Mat * rawImage, Direction direction)
 {
 	switch (direction) {
 	case LEFT:
 		dbusCallMethod(true, "Left");
-		myX--;
 		break;
 	case UP:
 		dbusCallMethod(true, "Up");
-		myY--;
 		break;
 	case RIGHT:
 		dbusCallMethod(true, "Right");
-		myX++;
 		break;
 	case DOWN:
 		dbusCallMethod(true, "Down");
-		myY++;
 		break;
 	}
-	usleep(1000*1000);
+	if (movedTo(rawImage, direction)) {
+    myX += dx(direction);
+    myY += dy(direction);
+  }
 }
 
 
@@ -79,23 +78,34 @@ void Map::detectSymbols(cv::Mat mat)
 			cv::matchTemplate(part, bottomTemplate, result, CV_TM_CCOEFF_NORMED);
 			cv::minMaxLoc(result, NULL, &bottomScore, NULL, NULL);
 
-			if (topScore > 0.95 || bottomScore > 0.95) {
-				if (map[myY + (y - 7)][myX + (x - 7)]->isUnknown()) {
-					delete map[myY + (y - 7)][myX + (x - 7)];
-					map[myY + (y - 7)][myX + (x - 7)] = new Floor(this);
-				}
+      if (topScore > 0.95 || bottomScore > 0.95) {
 				cv::rectangle(mat, grid, cv::Scalar(255, 0, 0), CV_FILLED);
+      }
+
+      if (map[myY + (y - 7)][myX + (x - 7)]->isUnknown()) {
+        delete map[myY + (y - 7)][myX + (x - 7)];
+
+        if (x == 7 && y == 7) {
+          map[myY][myX] = new Floor(this);
+        } else if (topScore > 0.95 || bottomScore > 0.95) {
+					map[myY + (y - 7)][myX + (x - 7)] = new Floor(this);
+				} else {
+          map[myY + (y - 7)][myX + (x - 7)] = new Unidentified(this);
+        }
 			}
 		}
 	}
- }
+}
 
 
 void Map::debug()
 {
 	for (int y = 0; y < SIZE; ++y) {
 		for (int x = 0; x < SIZE; ++x) {
-			std::cout << map[y][x]->character();
+      if (x == myX && y == myY)
+        std::cout << "@";
+      else
+        std::cout << map[y][x]->character();
 		}
 		std::cout << std::endl;
 	}

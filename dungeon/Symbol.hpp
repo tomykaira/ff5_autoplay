@@ -23,12 +23,63 @@ public:
 		visited = true;
 	}
 
-	virtual bool isUnknown() const {
+	virtual bool isUnknown() const = 0;
+
+	virtual std::string character() const = 0;
+};
+
+class Unseen : public Symbol
+{
+public:
+	Unseen(Map * container) :
+		Symbol(container)
+	{
+	};
+
+	bool isUnknown() const {
 		return true;
 	}
 
-	virtual std::string character() const {
+	std::string character() const {
 		return " ";
+	}
+};
+
+class Unidentified : public Symbol
+{
+public:
+	Unidentified(Map * container) :
+		Symbol(container)
+	{
+	};
+
+	bool isUnknown() const {
+		return true;
+	}
+
+	std::string character() const {
+		return "?";
+	}
+};
+
+class Block : public Symbol
+{
+public:
+	Block(Map * container) :
+		Symbol(container)
+	{
+	};
+
+	bool isVisited() const {
+		return false;
+	}
+
+	bool isUnknown() const {
+		return false;
+	}
+
+	std::string character() const {
+		return "X";
 	}
 };
 

@@ -105,16 +105,16 @@ int main(int argc, char* argv[])
 			goto end;
 
 		case 'h':
-			map->move(LEFT);
+			map->move(&rawImage, LEFT);
 			break;
 		case 'j':
-			map->move(DOWN);
+			map->move(&rawImage, DOWN);
 			break;
 		case 'k':
-			map->move(UP);
+			map->move(&rawImage, UP);
 			break;
 		case 'l':
-			map->move(RIGHT);
+			map->move(&rawImage, RIGHT);
 			break;
 
 		case 'd':

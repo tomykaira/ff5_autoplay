@@ -14,6 +14,9 @@
 
 enum Direction {LEFT = 0, UP = 1, RIGHT = 2, DOWN = 3};
 
+int dx(Direction d);
+int dy(Direction d);
+
 namespace dungeon {
 class Map;
 class Symbol;
@@ -23,5 +26,6 @@ class LefthandMethod;
 
 void drawGrid(cv::Mat mat);
 cv::Mat cropGroundTemplate(cv::Mat mat);
+bool movedTo(cv::Mat * rawImage, Direction direction);
 
 #endif /* _DUNGEON_H_ */

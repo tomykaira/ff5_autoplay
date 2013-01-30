@@ -7,7 +7,7 @@ namespace dungeon {
 
 class Map
 {
-	static const int SIZE = 32;
+	static const int SIZE = 64;
 
 	int myX, myY;
 
@@ -18,7 +18,7 @@ public:
 
 	Map(const cv::Mat groundTemplate);
 	virtual ~Map();
-	void move(Direction direction);
+	void move(cv::Mat * rawImage, Direction direction);
 	void detectSymbols(cv::Mat mat);
 
 	void debug();
