@@ -65,18 +65,18 @@ void Map::detectSymbols(cv::Mat mat)
 			cv::matchTemplate(part, bottomTemplate, result, CV_TM_CCOEFF_NORMED);
 			cv::minMaxLoc(result, NULL, &bottomScore, NULL, NULL);
 
-      if (topScore > 0.95 || bottomScore > 0.95) {
+			if (topScore > 0.95 || bottomScore > 0.95) {
 				cv::rectangle(mat, grid, cv::Scalar(255, 0, 0), CV_FILLED);
-      }
+			}
 
-      if (map[myY + (y - 7)][myX + (x - 7)]->isUnknown()) {
-        if (x == 7 && y == 7) {
-          replace(myX, myY, new Floor(this));
-        } else if (topScore > 0.95 || bottomScore > 0.95) {
-          replace(myX + (x - 7), myY + (y - 7), new Floor(this));
+			if (map[myY + (y - 7)][myX + (x - 7)]->isUnknown()) {
+				if (x == 7 && y == 7) {
+					replace(myX, myY, new Floor(this));
+				} else if (topScore > 0.95 || bottomScore > 0.95) {
+					replace(myX + (x - 7), myY + (y - 7), new Floor(this));
 				} else {
-          replace(myX + (x - 7), myY + (y - 7), new Unidentified(this));
-        }
+					replace(myX + (x - 7), myY + (y - 7), new Unidentified(this));
+				}
 			}
 		}
 	}
