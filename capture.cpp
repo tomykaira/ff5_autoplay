@@ -49,19 +49,20 @@ int sendCommand(int activeCharacter, cv::Mat mat, cv::Mat * rawImage)
 	switch (activeCharacter) {
 	case 0:
 		std::cout << "ファリス" << std::endl;
-		attack(rawImage);
+		command(rawImage, std::vector<int> { 1, 0 });
 		break;
 	case 1:
 		std::cout << "レナ" << std::endl;
-		attackParty(rawImage, lowestHPCharacter);
+		attack(rawImage);
+		// guard(rawImage);
 		break;
 	case 2:
 		std::cout << "クルル" << std::endl;
-		attack(rawImage);
+		command(rawImage, std::vector<int> { 1, 0 });
 		break;
 	case 3:
 		std::cout << "バッツ" << std::endl;
-		attack(rawImage);
+		command(rawImage, std::vector<int> { 2, 0 });
 		break;
 	}
 

@@ -14,5 +14,6 @@ void selectNth(cv::Mat * rawImage, int id);
 void attack(cv::Mat * rawImage);
 void attackParty(cv::Mat * rawImage, int characterId);
 void command(cv::Mat * rawImage, std::vector<int> ids);
+void guard(cv::Mat * rawImage);
 
 #endif /* _DBUS_CLIENT_H_ */

@@ -160,3 +160,10 @@ void selectNth(cv::Mat * rawImage, int id)
 	}
 	pressButton(rawImage, "A");
 }
+
+void guard(cv::Mat * rawImage)
+{
+	std::cout << "ガード" << std::endl;
+	pressButton(rawImage, "Right");
+	pressButton(rawImage, "A");
+}
