@@ -113,3 +113,42 @@ bool moveTo(cv::Mat * rawImage, Direction direction)
 
 	return difference((*rawImage)(toRect), expected) <= 0.1;
 }
+
+bool isBackground(cv::Mat crop)
+{
+	static const cv::Mat blackTemplate(32, 32, CV_8UC3, cv::Scalar(8, 8, 16));
+
+	assert(crop.rows == 32 && crop.cols == 32);
+
+	return (difference(crop, blackTemplate) < 0.05);
+}
+
+bool isUpSteps(cv::Mat crop)
+{
+	static const cv::Mat blackTemplate(16, 32, CV_8UC3, cv::Scalar(8, 8, 16));
+
+	assert(crop.rows == 48 && crop.cols == 32);
+
+	if (difference(crop(cv::Rect(0, 0, 32, 16)), blackTemplate) > 0.1) {
+		return false;
+	}
+
+	for (int nth = 0; nth < 2; ++nth) {
+		cv::Mat side = crop(cv::Rect(0, 24 + nth*16, 32, 8));
+		int baseBlackPixels = 0;
+
+		auto it = side.begin<uint32_t>();
+		for(; it!=side.end<uint32_t>(); ++it) {
+			uint32_t color = (*it & 0xffffff);
+			if (color == 0x100808 || color == 0x080810)
+				baseBlackPixels++;
+		}
+
+		// max: 256
+		if (baseBlackPixels < 200) {
+			return false;
+		}
+	}
+
+	return true;
+}

@@ -13,7 +13,12 @@ class Map
 
 	boost::multi_array<Symbol *, 2> map;
 
+	EdgeSet rootEdges;
+
 	void replace(int x, int y, Symbol * s);
+	Edge * createEdge(int x, int y, Direction d);
+	EdgeSet subedges(Edge * edge, Direction direction);
+	EdgeSet maximalEdges(EdgeSet edges);
 
 public:
 	const cv::Mat groundTemplate;
@@ -22,6 +27,7 @@ public:
 	virtual ~Map();
 	void move(cv::Mat * rawImage, Direction direction);
 	void detectSymbols(cv::Mat mat);
+	void calculatePath();
 
 	void debug();
 };
