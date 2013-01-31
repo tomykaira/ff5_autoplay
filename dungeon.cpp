@@ -124,6 +124,26 @@ bool isBackground(cv::Mat crop)
 	return (difference(crop, blackTemplate) < 0.05);
 }
 
+static const cv::Mat backLinkTemplate = cv::imread("templates/back_link.bmp", 0);
+
+bool isBackLink(cv::Mat crop)
+{
+	assert(crop.rows == 32 && crop.cols == 32);
+	cv::Mat bin(16, 32, CV_8UC1, cv::Scalar(0));
+
+	for (int y = 0; y < 16; ++y) {
+		uchar *line = crop.ptr(y);
+		for (int x = 0; x < crop.cols; ++x) {
+			bin.ptr(y)[x] =
+				(line[x*3] == 0x78 && line[x*3 + 1] == 0x80 && line[x*3 + 2] == 0x88) ||
+				(line[x*3] == 0xc0 && line[x*3 + 1] == 0xc8 && line[x*3 + 2] == 0xc0)    ? 255 : 0;
+		}
+	}
+
+	return templateIn(bin, cv::Rect(0, 0, 32, 16), backLinkTemplate);
+}
+
+
 bool isUpSteps(cv::Mat crop)
 {
 	static const cv::Mat blackTemplate(16, 32, CV_8UC3, cv::Scalar(8, 8, 16));

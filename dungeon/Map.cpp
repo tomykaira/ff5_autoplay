@@ -97,6 +97,15 @@ void Map::detectSymbols(cv::Mat mat)
 					replace(myX + (x - 7), myY + (y - 7), new Floor(this));
 				} else if (isBackground(part)) {
 					replace(myX + (x - 7), myY + (y - 7), new Block(this));
+				} else if (isBackLink(part)) {
+					// This condition is ambiguous
+					if (map[myY + (y - 7) - 1][myX + (x - 7) - 1]->movable() ||
+					    map[myY + (y - 7) - 1][myX + (x - 7) + 1]->movable()) {
+						replace(myX + (x - 7), myY + (y - 7), new Floor(this));
+						replace(myX + (x - 7), myY + (y - 7) + 1, new Link(this));
+					} else {
+						replace(myX + (x - 7), myY + (y - 7), new Link(this));
+					}
 				} else if (isUpSteps(tallPart)) {
 					replace(myX + (x - 7), myY + (y - 7), new Link(this));
 				} else if (isClosedDoor(tallPart)) {
