@@ -154,9 +154,28 @@ bool isUpSteps(cv::Mat crop)
 	return true;
 }
 
-static const cv::Mat doorTemplate = cv::imread("templates/door.bmp", 1);
+static const cv::Mat closedDooTemplate = cv::imread("templates/door.bmp", 1);
 
-bool isDoor(cv::Mat crop)
+bool isClosedDoor(cv::Mat crop)
 {
-	return templateIn(crop, cv::Rect(0, 0, 32, 48), doorTemplate);
+	assert(crop.rows == 48 && crop.cols == 32);
+	return templateIn(crop, cv::Rect(0, 0, 32, 48), closedDooTemplate);
+}
+
+static const cv::Mat openDoorTemplate = cv::imread("templates/door_open.bmp", 0);
+
+bool isOpenDoor(cv::Mat crop)
+{
+	assert(crop.rows == 48 && crop.cols == 32);
+	cv::Mat bin(48, 32, CV_8UC1, cv::Scalar(0));
+
+	for (int y = 0; y < crop.rows; ++y) {
+		uchar *line = crop.ptr(y);
+		for (int x = 0; x < crop.cols; ++x) {
+			bin.ptr(y)[x] =
+				line[x*3] == 0x08 && line[x*3 + 1] == 0x08 && line[x*3 + 2] == 0x10 ? 255 : 0;
+		}
+	}
+
+	return templateIn(bin, cv::Rect(0, 0, 32, 48), openDoorTemplate);
 }

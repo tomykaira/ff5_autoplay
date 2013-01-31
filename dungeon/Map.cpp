@@ -99,8 +99,10 @@ void Map::detectSymbols(cv::Mat mat)
 					replace(myX + (x - 7), myY + (y - 7), new Block(this));
 				} else if (isUpSteps(tallPart)) {
 					replace(myX + (x - 7), myY + (y - 7), new Link(this));
-				} else if (isDoor(tallPart)) {
+				} else if (isClosedDoor(tallPart)) {
 					replace(myX + (x - 7), myY + (y - 7), new Door(this, CLOSED));
+				} else if (isOpenDoor(tallPart)) {
+					replace(myX + (x - 7), myY + (y - 7), new Door(this, OPEN));
 				} else {
 					replace(myX + (x - 7), myY + (y - 7), new Unidentified(this));
 				}

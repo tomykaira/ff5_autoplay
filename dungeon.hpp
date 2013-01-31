@@ -39,6 +39,7 @@ bool isBackground(cv::Mat crop);
 
 // crop: 32x48
 bool isUpSteps(cv::Mat crop);
-bool isDoor(cv::Mat crop);
+bool isClosedDoor(cv::Mat crop);
+bool isOpenDoor(cv::Mat crop);
 
 #endif /* _DUNGEON_H_ */
