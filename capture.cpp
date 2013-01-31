@@ -132,6 +132,11 @@ int main(int argc, char* argv[])
 			}
 			map = new dungeon::Map(cropGroundTemplate(mat));
 			break;
+
+		case 'c':
+			if (map) {
+				map->calculatePath();
+			}
 		}
 	}
 

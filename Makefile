@@ -5,7 +5,7 @@ CPPFLAGS=-g -std=c++0x -Wall -I/usr/include/dbus-1.0/ -I/usr/lib/i386-linux-gnu/
 PROG=capture
 SRC=capture.cpp number.cpp dbus_client.cpp xlib_ext.cpp recognition.cpp \
 	time_util.cpp dungeon.cpp dungeon/Map.cpp dungeon/LefthandMethod.cpp \
-	dungeon/Symbol.cpp
+	dungeon/Symbol.cpp dungeon/Edge.cpp
 OBJS=$(patsubst %.cpp,%.o,$(SRC))
 DEPENDS=$(patsubst %.cpp,%.d,$(SRC))
 

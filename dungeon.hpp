@@ -14,12 +14,15 @@
 
 enum Direction {LEFT = 0, UP = 1, RIGHT = 2, DOWN = 3};
 
-int dx(Direction d);
-int dy(Direction d);
+int dx(const Direction d);
+int dy(const Direction d);
+std::string stringDirection (const Direction d);
 
 namespace dungeon {
 class Map;
 class Symbol;
+class Edge;
+typedef std::vector<std::shared_ptr<Edge>> EdgeSet;
 
 class LefthandMethod;
 }

@@ -21,6 +21,24 @@ int dy(Direction d)
 		return 0;
 }
 
+/**
+ * stream output operator
+ */
+std::string stringDirection (const Direction d) {
+	switch (d) {
+	case LEFT:
+		return "LEFT";
+	case UP:
+		return "UP";
+	case RIGHT:
+		return "RIGHT";
+	case DOWN:
+		return "DOWN";
+	}
+	return "";
+}
+
+
 void drawGrid(cv::Mat mat)
 {
 	for (int y = 0; y < 448; y += 32) {
@@ -81,7 +99,6 @@ bool moveTo(cv::Mat * rawImage, Direction direction)
 	                  448, 416);
 
 	cv::Mat expected = (*rawImage)(fromRect).clone();
-	time_t start = time(NULL);
 	int waitCount = 0;
 
 	dbusCallMethod(true, button.c_str());

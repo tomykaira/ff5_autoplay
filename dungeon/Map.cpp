@@ -5,6 +5,7 @@
 #include "dungeon.hpp"
 #include "dungeon/Map.hpp"
 #include "dungeon/Symbol.hpp"
+#include "dungeon/Edge.hpp"
 
 namespace dungeon {
 

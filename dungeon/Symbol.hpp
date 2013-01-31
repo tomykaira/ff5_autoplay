@@ -26,6 +26,10 @@ public:
 	virtual bool isUnknown() const = 0;
 
 	virtual std::string character() const = 0;
+
+	virtual bool movable() const {
+		return false;
+	}
 };
 
 class Unseen : public Symbol
@@ -98,6 +102,10 @@ public:
 	std::string character() const {
 		return "_";
 	}
+
+	bool movable() const {
+		return true;
+	}
 };
 
 class Link : public Symbol
@@ -122,9 +130,9 @@ public:
 
 	void visit();
 
-	Map getDestination() const {
+	Map * getDestination() const {
 		assert(destination);
-		return *destination;
+		return destination;
 	}
 
 	std::string character() const {
