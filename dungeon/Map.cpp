@@ -61,7 +61,7 @@ void Map::move(cv::Mat * rawImage, Direction direction)
 	} else if (moveTo(rawImage, direction) == MOVED) {
 		myX = nextX;
 		myY = nextY;
-	} else {
+	} else if (map[nextY][nextX]->isUnknown()) {
 		replace(nextX, nextY, new Block(this));
 	}
 }
@@ -97,6 +97,10 @@ void Map::detectSymbols(cv::Mat mat)
 					replace(myX + (x - 7), myY + (y - 7), new Floor(this));
 				} else if (isBackground(part)) {
 					replace(myX + (x - 7), myY + (y - 7), new Block(this));
+				} else if (isClosedTreasure(part)) {
+					replace(myX + (x - 7), myY + (y - 7), new Treasure(this, CLOSED));
+				} else if (isOpenTreasure(part)) {
+					replace(myX + (x - 7), myY + (y - 7), new Treasure(this, OPEN));
 				} else if (isBackLink(part)) {
 					// This condition is ambiguous
 					if (map[myY + (y - 7) - 1][myX + (x - 7) - 1]->movable() ||

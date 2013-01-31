@@ -143,6 +143,21 @@ bool isBackLink(cv::Mat crop)
 	return templateIn(bin, cv::Rect(0, 0, 32, 16), backLinkTemplate);
 }
 
+static const cv::Mat closedTreasureTemplate = cv::imread("templates/closed_treasure.bmp", 1);
+
+bool isClosedTreasure(cv::Mat crop)
+{
+	assert(crop.rows == 32 && crop.cols == 32);
+	return templateIn(crop, cv::Rect(0, 0, 32, 32), closedTreasureTemplate);
+}
+
+static const cv::Mat openTreasureTemplate = cv::imread("templates/open_treasure.bmp", 1);
+
+bool isOpenTreasure(cv::Mat crop)
+{
+	assert(crop.rows == 32 && crop.cols == 32);
+	return templateIn(crop, cv::Rect(0, 0, 32, 32), openTreasureTemplate);
+}
 
 bool isUpSteps(cv::Mat crop)
 {

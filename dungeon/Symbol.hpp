@@ -144,21 +144,23 @@ public:
 	}
 };
 
-enum DoorStatus {OPEN, CLOSED};
+enum OpenStatus {OPEN, CLOSED};
 
-class Door : public Symbol
+// openable, but not closable
+class Openable
 {
-	DoorStatus status;
+	OpenStatus status;
 
 public:
-	Door(Map * container, DoorStatus status) :
-		Symbol(container),
+
+	Openable(OpenStatus status) :
 		status(status)
 	{
 	}
 
-	bool isUnknown() const {
-		return false;
+	Openable():
+		status(CLOSED)
+	{
 	}
 
 	void open()
@@ -171,6 +173,22 @@ public:
 		return (status == OPEN);
 	}
 
+};
+
+
+class Door : public Symbol, public Openable
+{
+public:
+	Door(Map * container, OpenStatus status) :
+		Symbol(container),
+		Openable(status)
+	{
+	}
+
+	bool isUnknown() const {
+		return false;
+	}
+
 	void visit()
 	{
 		assert(false && "You cannot visit a door, replace it with Floor or Link");
@@ -181,10 +199,40 @@ public:
 	}
 
 	std::string character() const {
-		if (status == OPEN)
+		if (isOpen())
 			return "O";
 		else
 			return "C";
+	}
+};
+
+class Treasure : public Symbol, public Openable
+{
+public:
+	Treasure(Map * container, OpenStatus status) :
+		Symbol(container),
+		Openable(status)
+	{
+	}
+
+	bool isUnknown() const {
+		return false;
+	}
+
+	void visit()
+	{
+		assert(false && "You cannot visit a treasure");
+	}
+
+	bool movable() const {
+		return false;
+	}
+
+	std::string character() const {
+		if (isOpen())
+			return "o";
+		else
+			return "T";
 	}
 };
 

@@ -37,6 +37,8 @@ MoveResult moveTo(cv::Mat * rawImage, Direction direction);
 // crop: 32x32
 bool isBackground(cv::Mat crop);
 bool isBackLink(cv::Mat crop);
+bool isClosedTreasure(cv::Mat crop);
+bool isOpenTreasure(cv::Mat crop);
 
 // crop: 32x48
 bool isUpSteps(cv::Mat crop);
