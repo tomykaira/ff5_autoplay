@@ -1,5 +1,9 @@
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/highgui/highgui.hpp>
+
 #include "dungeon.hpp"
 #include "dbus_client.hpp"
+#include "recognition.hpp"
 
 int dx(Direction d)
 {
@@ -70,7 +74,7 @@ double difference(cv::Mat a, cv::Mat b)
 	return (double)changedPixels / (double)(diff.rows * diff.cols);
 }
 
-bool moveTo(cv::Mat * rawImage, Direction direction)
+MoveResult moveTo(cv::Mat * rawImage, Direction direction)
 {
 	static const int MAX_WAIT_COUNT = 50;
 
@@ -102,16 +106,13 @@ bool moveTo(cv::Mat * rawImage, Direction direction)
 	int waitCount = 0;
 
 	dbusCallMethod(true, button.c_str());
-	// break through a door
-	usleep(100*1000);
-	dbusCallMethod(true, button.c_str());
 
 	while (difference((*rawImage)(toRect), expected) > 0.1 && waitCount < MAX_WAIT_COUNT) {
 		waitCount++;
 		usleep(1000);
 	}
 
-	return difference((*rawImage)(toRect), expected) <= 0.1;
+	return difference((*rawImage)(toRect), expected) <= 0.1 ? MOVED : NOT_MOVED;
 }
 
 bool isBackground(cv::Mat crop)
@@ -151,4 +152,11 @@ bool isUpSteps(cv::Mat crop)
 	}
 
 	return true;
+}
+
+static const cv::Mat doorTemplate = cv::imread("templates/door.bmp", 1);
+
+bool isDoor(cv::Mat crop)
+{
+	return templateIn(crop, cv::Rect(0, 0, 32, 48), doorTemplate);
 }

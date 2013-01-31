@@ -5,6 +5,8 @@
 
 #include <opencv2/core/core.hpp>
 
+bool templateIn(cv::Mat mat, cv::Rect roi, const cv::Mat temp);
+
 bool inBattle(cv::Mat mat);
 bool inField(cv::Mat mat);
 bool afterBattle(cv::Mat mat);

@@ -138,7 +138,57 @@ public:
 	std::string character() const {
 		return "*";
 	}
+
+	bool movable() const {
+		return true;
+	}
 };
+
+enum DoorStatus {OPEN, CLOSED};
+
+class Door : public Symbol
+{
+	DoorStatus status;
+
+public:
+	Door(Map * container, DoorStatus status) :
+		Symbol(container),
+		status(status)
+	{
+	}
+
+	bool isUnknown() const {
+		return false;
+	}
+
+	void open()
+	{
+		status = OPEN;
+	}
+
+	bool isOpen() const
+	{
+		return (status == OPEN);
+	}
+
+	void visit()
+	{
+		assert(false && "You cannot visit a door, replace it with Floor or Link");
+	}
+
+	bool movable() const {
+		return true;
+	}
+
+	std::string character() const {
+		if (status == OPEN)
+			return "O";
+		else
+			return "C";
+	}
+};
+
+
 
 }
 

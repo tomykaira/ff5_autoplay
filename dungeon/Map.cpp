@@ -38,11 +38,31 @@ Map::~Map()
 
 void Map::move(cv::Mat * rawImage, Direction direction)
 {
-	if (moveTo(rawImage, direction)) {
-		myX += dx(direction);
-		myY += dy(direction);
+	int nextX = myX + dx(direction), nextY = myY + dy(direction);
+	if (Door * door = dynamic_cast<Door *>(map[nextY][nextX])) {
+		if (door->isOpen()) {
+			switch (moveTo(rawImage, direction)) {
+			case NOT_MOVED:
+				assert(false && "Door should be movable");
+				break;
+			case MOVED:
+				replace(nextX, nextY, new Floor(this));
+				break;
+			case MAP_CHANGED:
+				Link * link = new Link(this);
+				replace(nextX, nextY, link);
+				break;
+			}
+		} else {
+			// Push the door
+			moveTo(rawImage, direction);
+			door->open();
+		}
+	} else if (moveTo(rawImage, direction) == MOVED) {
+		myX = nextX;
+		myY = nextY;
 	} else {
-		replace(myX + dx(direction), myY + dy(direction), new Block(this));
+		replace(nextX, nextY, new Block(this));
 	}
 }
 
@@ -58,7 +78,7 @@ void Map::detectSymbols(cv::Mat mat)
 	for (int y = 1; y < 14; ++y) {
 		for (int x = 0; x < 15; ++x) {
 			cv::Rect grid(x*32, y*32 - 2, 32, 32);
-			cv::Mat part = mat(grid);
+			cv::Mat part = mat(grid), tallPart = mat(cv::Rect(x*32, y*32 - 18, 32, 48));
 
 			cv::matchTemplate(part, topTemplate, result, CV_TM_CCOEFF_NORMED);
 			cv::minMaxLoc(result, NULL, &topScore, NULL, NULL);
@@ -77,8 +97,10 @@ void Map::detectSymbols(cv::Mat mat)
 					replace(myX + (x - 7), myY + (y - 7), new Floor(this));
 				} else if (isBackground(part)) {
 					replace(myX + (x - 7), myY + (y - 7), new Block(this));
-				} else if (isUpSteps(mat(cv::Rect(x*32, y*32 - 18, 32, 48)))) {
+				} else if (isUpSteps(tallPart)) {
 					replace(myX + (x - 7), myY + (y - 7), new Link(this));
+				} else if (isDoor(tallPart)) {
+					replace(myX + (x - 7), myY + (y - 7), new Door(this, CLOSED));
 				} else {
 					replace(myX + (x - 7), myY + (y - 7), new Unidentified(this));
 				}
