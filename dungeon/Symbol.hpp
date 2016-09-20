@@ -158,9 +158,9 @@ public:
 	{
 	}
 
-	Openable():
-		status(CLOSED)
+	Openable()
 	{
+		new(this) Openable(OPEN);
 	}
 
 	void open()
